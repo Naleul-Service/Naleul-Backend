@@ -28,10 +28,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         // 토큰 없어도 되는 경로는 필터 통과
         String path = request.getRequestURI();
-        if (path.startsWith("/api/auth/") || path.equals("/actuator/health")) {
+        if (path.startsWith("/api/auth/")
+                || path.equals("/actuator/health")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
             return;
         }
+
 
         try {
             String token = extractToken(request);
