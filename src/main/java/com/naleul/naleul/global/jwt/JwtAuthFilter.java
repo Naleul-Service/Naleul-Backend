@@ -26,24 +26,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        // 토큰 없어도 되는 경로는 필터 통과
+        String path = request.getRequestURI();
+        if (path.startsWith("/api/auth/") || path.equals("/actuator/health")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = extractToken(request);
             jwtProvider.validateToken(token);
-
             Long userId = jwtProvider.getUserId(token);
             String role = jwtProvider.getRole(token);
 
-            // Security Context에 인증 정보 저장
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            userId,   // principal - 컨트롤러에서 꺼내 쓸 값
+                            userId,
                             null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
-
         } catch (CustomException e) {
             sendErrorResponse(response, e.getErrorCode());
         }
