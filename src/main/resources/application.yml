@@ -4,9 +4,6 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 spring:
-  security:
-    filter:
-      order: 10
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,3 +11,12 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
