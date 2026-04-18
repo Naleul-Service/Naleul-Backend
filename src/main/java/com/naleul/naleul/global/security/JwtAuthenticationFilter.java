@@ -17,6 +17,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
+// @Component 제거됨: SecurityConfig에서 new로 생성하여 관리
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
@@ -29,20 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 1. 화이트리스트 경로는 토큰 검사 없이 바로 통과
-        if (path.startsWith("/api/auth/") ||
-                path.startsWith("/actuator/") ||
-                path.startsWith("/api/health") ||
-                path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
-                path.equals("/swagger-ui.html")) {
+        // 화이트리스트 경로 체크
+        if (isWhiteList(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        // 2. 헤더가 없거나 Bearer 형식이 아니면 다음 필터로 (SecurityConfig가 차단 여부 결정)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -54,24 +49,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtProvider.isValid(token)) {
                 setAuthentication(token);
             } else if (jwtProvider.isExpired(token)) {
-                log.info("JWT 만료 감지 - 자동 갱신 시도: {}", path);
-                Long userId = jwtProvider.extractUserIdIgnoreExpiration(token);
-                String newToken = tokenService.reissueJwt(userId);
-
-                response.setHeader("Authorization", "Bearer " + newToken);
-                response.setHeader("Access-Control-Expose-Headers", "Authorization");
-                setAuthenticationByUserId(userId);
+                handleExpiredToken(token, response);
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         } catch (Exception e) {
-            log.error("토큰 처리 중 에러 발생: {}", e.getMessage());
+            log.error("JWT 처리 에러: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isWhiteList(String path) {
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/actuator/") ||
+                path.startsWith("/api/health") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.equals("/swagger-ui.html");
+    }
+
+    private void handleExpiredToken(String token, HttpServletResponse response) {
+        log.info("만료 토큰 재발급 시도");
+        Long userId = jwtProvider.extractUserIdIgnoreExpiration(token);
+        String newToken = tokenService.reissueJwt(userId);
+
+        response.setHeader("Authorization", "Bearer " + newToken);
+        response.setHeader("Access-Control-Expose-Headers", "Authorization");
+        setAuthenticationByUserId(userId);
     }
 
     private void setAuthentication(String token) {
