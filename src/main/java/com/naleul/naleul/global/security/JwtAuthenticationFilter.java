@@ -30,6 +30,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        log.info(">>>> Request Path: {}", path); // 디버깅용 로그
+
+        // 1. 화이트리스트 경로는 토큰 검사 없이 바로 다음 필터로 넘김
+        if (path.startsWith("/api/auth/") ||
+                path.startsWith("/actuator/") ||
+                path.startsWith("/api/health") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.equals("/swagger-ui.html")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         // Authorization 헤더 없으면 그냥 통과 (로그인 안 한 요청)
