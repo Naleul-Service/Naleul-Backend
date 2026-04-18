@@ -2,6 +2,7 @@ package com.naleul.naleul.domain.user.service;
 
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.global.common.response.ApiResponse;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
