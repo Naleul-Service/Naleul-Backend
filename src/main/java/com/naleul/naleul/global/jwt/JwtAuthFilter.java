@@ -29,7 +29,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 토큰 없어도 되는 경로는 필터 통과
         String path = request.getRequestURI();
         if (path.startsWith("/api/auth/")
-                || path.equals("/actuator/health")
+                || path.startsWith("/actuator/")
+                || path.startsWith("/api/health")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
