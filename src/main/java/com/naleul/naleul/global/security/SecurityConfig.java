@@ -2,10 +2,8 @@ package com.naleul.naleul.global.security;
 
 import com.naleul.naleul.domain.user.service.TokenService;
 import com.naleul.naleul.global.jwt.JwtProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy; // import 확인
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
