@@ -37,12 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Actuator 및 화이트리스트 최상단 배치
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // 일단 전체 허용, 나중에 세분화
                 )
                 // 필터를 직접 생성하여 등록 (SecurityConfig 설정을 확실히 태움)
                 .addFilterBefore(
