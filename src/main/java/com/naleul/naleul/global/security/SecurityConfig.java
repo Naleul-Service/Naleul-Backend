@@ -24,6 +24,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,7 +42,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()                   // 나머지는 JWT 필요
                 )
                 .addFilterBefore(
-                        new JwtAuthFilter(jwtProvider),
+                        jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class      // Security 기본 필터 앞에 끼워넣기
                 );
 

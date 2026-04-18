@@ -64,4 +64,40 @@ public class JwtProvider {
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
+
+    // JwtProvider.java에 추가
+
+    // 토큰이 정상인지 (유효 + 만료 안됨)
+    public boolean isValid(String token) {
+        try {
+            getClaims(token); // 내부적으로 파싱
+            return true;
+        } catch (ExpiredJwtException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // 토큰이 만료됐는지
+    public boolean isExpired(String token) {
+        try {
+            getClaims(token);
+            return false;
+        } catch (ExpiredJwtException e) {
+            return true; // 만료됨
+        } catch (Exception e) {
+            return false; // 만료가 아닌 다른 문제
+        }
+    }
+
+    // 만료된 토큰에서도 userId 추출 (갱신할 때 누구 토큰인지 알아야 함)
+    public Long extractUserIdIgnoreExpiration(String token) {
+        try {
+            return getUserId(token);
+        } catch (ExpiredJwtException e) {
+            // 만료 예외에서도 Claims는 꺼낼 수 있음
+            return Long.parseLong(e.getClaims().getSubject());
+        }
+    }
 }
