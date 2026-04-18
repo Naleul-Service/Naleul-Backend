@@ -1,5 +1,6 @@
 package com.naleul.naleul.global.jwt;
 
+import com.naleul.naleul.domain.user.enums.UserRole;
 import com.naleul.naleul.global.exception.CustomException;
 import com.naleul.naleul.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
@@ -23,7 +24,7 @@ public class JwtProvider {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    public String generateToken(Long userId, String role) {
+    public String generateToken(Long userId, UserRole role) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("role", role)

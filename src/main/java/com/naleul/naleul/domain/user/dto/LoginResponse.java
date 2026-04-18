@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.user.dto;
 
+import com.naleul.naleul.domain.user.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,4 +12,5 @@ public class LoginResponse {
     private Long userId;
     private String userName;
     private String userEmail;
+    private UserRole userRole;
 }

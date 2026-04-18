@@ -41,9 +41,9 @@ public class KakaoAuthService {
         User user = saveOrGetUser(kakaoUserInfo);
 
         // 4. JWT 발급
-        String jwtToken = jwtProvider.generateToken(user.getUserId(), user.getUserEmail());
+        String jwtToken = jwtProvider.generateToken(user.getUserId(), user.getUserRole());
 
-        return new LoginResponse(jwtToken, user.getUserId(), user.getUserName(), user.getUserEmail());
+        return new LoginResponse(jwtToken, user.getUserId(), user.getUserName(), user.getUserEmail(), user.getUserRole());
     }
 
     private KakaoTokenResponse getKakaoToken(String code) {
