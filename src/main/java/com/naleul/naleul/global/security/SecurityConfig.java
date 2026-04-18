@@ -19,13 +19,17 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
 
-    @Lazy // 순환 참조 방지를 위해 지연 주입 설정
     private final TokenService tokenService;
+
+    // @RequiredArgsConstructor 제거하고 생성자 직접 작성
+    public SecurityConfig(JwtProvider jwtProvider, TokenService tokenService) {
+        this.jwtProvider = jwtProvider;
+        this.tokenService = tokenService;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
