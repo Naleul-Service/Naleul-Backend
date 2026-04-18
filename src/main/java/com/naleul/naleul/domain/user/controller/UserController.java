@@ -1,6 +1,6 @@
 package com.naleul.naleul.domain.user.controller;
 
-import com.naleul.naleul.domain.user.entity.User;
+import com.naleul.naleul.domain.user.dto.response.UserResponse;
 import com.naleul.naleul.domain.user.service.UserService;
 import com.naleul.naleul.global.common.response.ApiResponse;
 import com.naleul.naleul.global.common.response.SuccessCode;
@@ -21,14 +21,14 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(SuccessCode.USERS_FOUND, userService.getAllUsers()));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long userId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(SuccessCode.USER_FOUND, userService.getUserById(userId)));
     }
