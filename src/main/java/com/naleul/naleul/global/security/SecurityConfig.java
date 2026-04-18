@@ -1,6 +1,6 @@
 package com.naleul.naleul.global.security;
 
-import com.naleul.naleul.global.jwt.JwtAuthFilter;
+import com.naleul.naleul.domain.user.service.TokenService;
 import com.naleul.naleul.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -24,25 +22,27 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TokenService tokenService; // 필터 대신 서비스를 주입받음
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())               // REST API이므로 CSRF 불필요
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 쓰므로 세션 미사용
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Actuator를 모든 인증 필터보다 먼저 명시적으로 허용
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()                   // 나머지는 JWT 필요
+                        .anyRequest().authenticated()
                 )
+                // 필터를 여기서 직접 생성하여 등록 (순환 참조 방지)
                 .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class      // Security 기본 필터 앞에 끼워넣기
+                        new JwtAuthenticationFilter(jwtProvider, tokenService),
+                        UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
@@ -51,29 +51,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",        // 로컬 개발
-                "https://naleul.com"            // 실제 배포 도메인으로 교체
-        ));
-
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
-
+        config.setAllowedOrigins(List.of("http://localhost:3000", "https://www.naleul.com"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);   // 쿠키/Authorization 헤더 허용
-        config.setMaxAge(3600L);            // preflight 캐시 1시간
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> {
-            throw new UsernameNotFoundException("Not used");
-        };
     }
 }
