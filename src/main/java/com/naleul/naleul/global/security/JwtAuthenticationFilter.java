@@ -39,8 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+            // 토큰 없으면 401 바로 반환
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"message\":\"인증이 필요합니다.\",\"status\":\"401\",\"success\":false}");
+            return; // filterChain.doFilter 호출 안 함!
         }
 
         String token = authHeader.replace("Bearer ", "");

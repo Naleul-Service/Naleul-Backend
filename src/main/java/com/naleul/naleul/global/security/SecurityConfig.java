@@ -44,7 +44,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",            // 스웨거
                                 "/v3/api-docs/**",           // 스웨거
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/actuator/health"
                         ).permitAll()
                         .anyRequest().authenticated()        // 나머지는 토큰 필요
                 )
