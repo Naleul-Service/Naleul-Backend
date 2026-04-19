@@ -1,8 +1,8 @@
 package com.naleul.naleul.global.jwt;
 
 import com.naleul.naleul.domain.user.enums.UserRole;
+import com.naleul.naleul.global.common.response.ErrorCode;
 import com.naleul.naleul.global.exception.CustomException;
-import com.naleul.naleul.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

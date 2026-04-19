@@ -2,20 +2,21 @@ package com.naleul.naleul.global.common.response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
 public enum SuccessCode {
     // 공통
-    OK(200, "요청이 성공했습니다."),
-    CREATED(201, "생성이 완료되었습니다."),
+    OK(HttpStatus.OK, "요청이 성공했습니다."),
+    CREATED(HttpStatus.CREATED, "생성이 완료되었습니다."),
 
     // 유저
-    USERS_FOUND(200, "전체 유저 조회 성공"),
-    USER_FOUND(200, "유저 조회 성공"),
-    USER_CREATED(201, "회원가입 성공"),
-    LOGIN_SUCCESS(200, "로그인 성공");
+    USERS_FOUND(HttpStatus.OK, "전체 유저 조회 성공"),
+    USER_FOUND(HttpStatus.OK, "유저 조회 성공"),
+    USER_CREATED(HttpStatus.CREATED, "회원가입 성공"),
+    LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공");
 
-    private final int status;
+    private final HttpStatus status;
     private final String message;
 }

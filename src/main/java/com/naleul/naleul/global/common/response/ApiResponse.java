@@ -3,18 +3,19 @@ package com.naleul.naleul.global.common.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL) // null인 필드는 JSON에서 제외
 public class ApiResponse<T> {
 
     private final boolean success;
-    private final int status;
+    private final HttpStatus status;
     private final String message;
     private final T data;
 
     @Builder
-    private ApiResponse(boolean success, int status, String message, T data) {
+    private ApiResponse(boolean success, HttpStatus status, String message, T data) {
         this.success = success;
         this.status = status;
         this.message = message;
