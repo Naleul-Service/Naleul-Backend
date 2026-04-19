@@ -57,6 +57,23 @@ public class GoalCategoryService {
         return GoalCategoryResponse.from(saved);
     }
 
+    // 목표 카테고리 단건 조회
+    public GoalCategoryResponse getGoalCategory(Long goalCategoryId) {
+        GoalCategory goalCategory = goalCategoryRepository.findByIdWithAll(goalCategoryId)
+                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+
+        return GoalCategoryResponse.from(goalCategory);
+    }
+
+    // 목표 카테고리 전체 조회 (유저별)
+    public List<GoalCategoryResponse> getGoalCategories(Long userId) {
+        return goalCategoryRepository.findAllByUserIdWithAll(userId)
+                .stream()
+                .map(GoalCategoryResponse::from)
+                .toList();
+    }
+
+
     // 기본 목표 카테고리 기타 추가
     @Transactional
     public void createDefaultEtcCategory(User user) {

@@ -5,6 +5,7 @@ import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCompleteReq
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCreateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryUpdateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.response.GoalCategoryResponse;
+import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.global.common.response.ApiResponse;
 import com.naleul.naleul.global.common.response.SuccessCode;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +33,26 @@ public class GoalCategoryController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(SuccessCode.GOAL_CREATED, response));
+    }
+
+    // 목표 카테고리 단건 조회
+    @GetMapping("/{goalCategoryId}")
+    public ResponseEntity<ApiResponse<GoalCategoryResponse>> getGoalCategory(
+            @PathVariable Long goalCategoryId
+    ) {
+        GoalCategoryResponse response = goalCategoryService.getGoalCategory(goalCategoryId);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.GOAL_FOUND, response));
+    }
+
+    // 목표 카테고리 전체 조회 (내 목표만)
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<GoalCategoryResponse>>> getGoalCategories(
+            @AuthenticationPrincipal Long userId
+    ) {
+        List<GoalCategoryResponse> response = goalCategoryService.getGoalCategories(userId);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.GOAL_FOUND, response));
     }
 
     // 목표 카테고리 수정
