@@ -49,7 +49,12 @@ public class GoalCategoryService {
                 .goalCategoryStartDate(request.getGoalCategoryStartDate())
                 .build();
 
-        return GoalCategoryResponse.from(goalCategoryRepository.save(goalCategory));
+        goalCategoryRepository.save(goalCategory);
+
+        GoalCategory saved = goalCategoryRepository.findByIdWithAll(goalCategory.getGoalCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+
+        return GoalCategoryResponse.from(saved);
     }
 
     // 기본 목표 카테고리 기타 추가
