@@ -24,12 +24,24 @@ public class JwtProvider {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    public String generateToken(Long userId, UserRole role) {
+    private static final long ACCESS_TOKEN_EXPIRE = 1000L * 60 * 60;        // 1시간
+    private static final long REFRESH_TOKEN_EXPIRE = 1000L * 60 * 60 * 24 * 14; // 14일
+
+    public String generateAccessToken(Long userId, UserRole role) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("role", role)
+                .claim("role", role.name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(Long userId) {
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE))
                 .signWith(getSigningKey())
                 .compact();
     }

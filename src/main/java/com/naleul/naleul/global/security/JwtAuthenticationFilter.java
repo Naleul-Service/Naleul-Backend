@@ -1,6 +1,7 @@
 package com.naleul.naleul.global.security;
 
-import com.naleul.naleul.domain.user.service.TokenService;
+import com.naleul.naleul.domain.user.dto.LoginResponse;
+import com.naleul.naleul.domain.user.service.TokenReissueService;
 import com.naleul.naleul.global.jwt.JwtProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,11 +18,10 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-// @Component 제거됨: SecurityConfig에서 new로 생성하여 관리
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
-    private final TokenService tokenService;
+    private final TokenReissueService tokenReissueService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -73,9 +73,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void handleExpiredToken(String token, HttpServletResponse response) {
-        log.info("만료 토큰 재발급 시도");
         Long userId = jwtProvider.extractUserIdIgnoreExpiration(token);
-        String newToken = tokenService.reissueJwt(userId);
+        LoginResponse newToken = tokenReissueService.reissue(userId);
 
         response.setHeader("Authorization", "Bearer " + newToken);
         response.setHeader("Access-Control-Expose-Headers", "Authorization");

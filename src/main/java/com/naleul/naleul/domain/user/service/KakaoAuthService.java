@@ -45,13 +45,13 @@ public class KakaoAuthService {
         // 3. DB에 유저 저장 또는 조회 (없으면 회원가입, 있으면 로그인)
         User user = saveOrGetUser(kakaoUserInfo);
 
-        // 4. refreshToken DB 저장(있으면 업데이트, 없으면 새로 저장)
-        saveOrUpdateRefreshToken(user.getUserId(), tokenResponse);
+        // 5. JWT 발급
+        String accessToken = jwtProvider.generateAccessToken(user.getUserId(), user.getUserRole());
+        String refreshToken = jwtProvider.generateRefreshToken(user.getUserId());
 
-        // 4. JWT 발급
-        String jwtToken = jwtProvider.generateToken(user.getUserId(), user.getUserRole());
+        saveOrUpdateRefreshToken(user.getUserId(), refreshToken);
 
-        return new LoginResponse(jwtToken, user.getUserId(), user.getUserName(), user.getUserEmail(), user.getUserRole());
+        return new LoginResponse(accessToken, refreshToken, user.getUserId(), user.getUserName(), user.getUserEmail(), user.getUserRole());
     }
 
     private KakaoTokenResponse getKakaoToken(String code) {
@@ -90,20 +90,16 @@ public class KakaoAuthService {
                 ));
     }
 
-    private void saveOrUpdateRefreshToken(Long userId, KakaoTokenResponse tokenResponse) {
-        // 만료 시각 계산 (카카오가 초 단위로 줌)
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(tokenResponse.getRefreshTokenExpiresIn());
+    private void saveOrUpdateRefreshToken(Long userId, String refreshToken) {
+        LocalDateTime expiresAt = LocalDateTime.now().plusDays(14);
 
         refreshTokenRepository.findByUserId(userId)
                 .ifPresentOrElse(
-                        // 이미 있으면 → 토큰 값만 업데이트
-                        existing -> existing.updateToken(tokenResponse.getRefreshToken(), expiresAt),
-                        // 없으면 → 새로 저장
+                        existing -> existing.updateToken(refreshToken, expiresAt),
                         () -> refreshTokenRepository.save(
                                 RefreshToken.builder()
                                         .userId(userId)
-                                        .token(tokenResponse.getRefreshToken())
+                                        .token(refreshToken)
                                         .expiresAt(expiresAt)
                                         .build()
                         )

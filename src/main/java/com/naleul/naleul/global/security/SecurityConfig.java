@@ -1,6 +1,6 @@
 package com.naleul.naleul.global.security;
 
-import com.naleul.naleul.domain.user.service.TokenService;
+import com.naleul.naleul.domain.user.service.TokenReissueService;
 import com.naleul.naleul.global.jwt.JwtProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,12 +21,12 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
 
-    private final TokenService tokenService;
+    private final TokenReissueService tokenReissueService;
 
     // @RequiredArgsConstructor 제거하고 생성자 직접 작성
-    public SecurityConfig(JwtProvider jwtProvider, TokenService tokenService) {
+    public SecurityConfig(JwtProvider jwtProvider, TokenReissueService tokenReissueService) {
         this.jwtProvider = jwtProvider;
-        this.tokenService = tokenService;
+        this.tokenReissueService = tokenReissueService;
     }
 
     @Bean
@@ -43,7 +43,7 @@ public class SecurityConfig {
                 )
                 // 필터를 직접 생성하여 등록 (SecurityConfig 설정을 확실히 태움)
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtProvider, tokenService),
+                        new JwtAuthenticationFilter(jwtProvider, tokenReissueService),
                         UsernamePasswordAuthenticationFilter.class
                 );
 
