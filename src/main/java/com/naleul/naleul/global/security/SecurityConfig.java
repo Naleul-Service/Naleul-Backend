@@ -56,8 +56,7 @@ public class SecurityConfig {
         // www가 붙은 도메인과 안 붙은 도메인 모두 허용하는 것이 안전합니다.
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "https://www.naleul.com",
-                "https://naleul.com"
+                "https://naleul.vercel.app"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
