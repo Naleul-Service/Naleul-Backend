@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.user.service;
 
+import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.domain.user.dto.KakaoTokenResponse;
 import com.naleul.naleul.domain.user.dto.KakaoUserInfo;
 import com.naleul.naleul.domain.user.dto.LoginResponse;
@@ -24,6 +25,7 @@ public class KakaoAuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
+    private final GoalCategoryService goalCategoryService;
 
     @Value("${kakao.client-id}")
     private String clientId;
@@ -81,13 +83,20 @@ public class KakaoAuthService {
 
     private User saveOrGetUser(KakaoUserInfo kakaoUserInfo) {
         return userRepository.findByUserEmail(kakaoUserInfo.getEmail())
-                .orElseGet(() -> userRepository.save(
-                        User.builder()
-                                .userName(kakaoUserInfo.getNickname())
-                                .userEmail(kakaoUserInfo.getEmail())
-                                .userRole(UserRole.FREE)
-                                .build()
-                ));
+                .orElseGet(() -> {
+                    User newUser = userRepository.save(
+                            User.builder()
+                                    .userName(kakaoUserInfo.getNickname())
+                                    .userEmail(kakaoUserInfo.getEmail())
+                                    .userRole(UserRole.FREE)
+                                    .build()
+                    );
+
+                    // 신규 유저에게만 ETC 목표 자동 생성
+                    goalCategoryService.createDefaultEtcCategory(newUser);
+
+                    return newUser;
+                });
     }
 
     private void saveOrUpdateRefreshToken(Long userId, String refreshToken) {
