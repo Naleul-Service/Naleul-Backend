@@ -17,6 +17,7 @@ out/
 *.env
 application-local.properties
 application-secret.properties
+application.yml
 
 # 로그
 *.log
