@@ -39,7 +39,14 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // 일단 전체 허용, 나중에 세분화
+                        .requestMatchers(
+                                "/api/v1/auth/**",           // 로그인, 회원가입
+                                "/swagger-ui/**",            // 스웨거
+                                "/v3/api-docs/**",           // 스웨거
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()        // 나머지는 토큰 필요
                 )
                 // 필터를 직접 생성하여 등록 (SecurityConfig 설정을 확실히 태움)
                 .addFilterBefore(
@@ -57,6 +64,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "https://naleul.vercel.app",
+                "https://naleul.com",
                 "https://www.naleul.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
