@@ -111,4 +111,38 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("endDateTime") LocalDateTime endDateTime,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT DISTINCT t FROM Task t
+        JOIN FETCH t.goalCategory
+        JOIN FETCH t.generalCategory
+        JOIN FETCH t.taskDayOfWeeks tdow
+        JOIN FETCH tdow.dayOfWeek
+        WHERE t.user.userId = :userId
+        AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
+        AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
+        ORDER BY t.plannedStartAt ASC
+    """)
+    List<Task> findWeeklyTasksWithoutPage(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        SELECT DISTINCT t FROM Task t
+        JOIN FETCH t.goalCategory
+        JOIN FETCH t.generalCategory
+        JOIN FETCH t.taskDayOfWeeks tdow
+        JOIN FETCH tdow.dayOfWeek
+        WHERE t.user.userId = :userId
+        AND YEAR(t.plannedStartAt) = :year
+        AND MONTH(t.plannedStartAt) = :month
+        ORDER BY t.plannedStartAt ASC
+    """)
+    List<Task> findMonthlyTasksWithoutPage(
+            @Param("userId") Long userId,
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
 }

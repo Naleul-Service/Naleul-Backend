@@ -1,8 +1,10 @@
 package com.naleul.naleul.domain.task.controller;
 
 import com.naleul.naleul.domain.task.dto.request.*;
+import com.naleul.naleul.domain.task.dto.response.TaskMonthlyResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskResponse;
+import com.naleul.naleul.domain.task.dto.response.TaskWeeklyResponse;
 import com.naleul.naleul.domain.task.service.TaskService;
 import com.naleul.naleul.global.common.response.ApiResponse;
 import com.naleul.naleul.global.common.response.SuccessCode;
@@ -76,23 +78,21 @@ public class TaskController {
     }
 
     @GetMapping("/weekly")
-    public ResponseEntity<ApiResponse<TaskPageResponse>> getWeeklyTasks(
+    public ResponseEntity<ApiResponse<TaskWeeklyResponse>> getWeeklyTasks(
             @AuthenticationPrincipal Long userId,
-            @ModelAttribute TaskWeeklyRequest request,
-            @PageableDefault(size = 20, sort = "plannedStartAt") Pageable pageable
+            @ModelAttribute TaskWeeklyRequest request
     ) {
-        TaskPageResponse response = taskService.getWeeklyTasks(userId, request, pageable);
+        TaskWeeklyResponse response = taskService.getWeeklyTasks(userId, request);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
     }
 
     @GetMapping("/monthly")
-    public ResponseEntity<ApiResponse<TaskPageResponse>> getMonthlyTasks(
+    public ResponseEntity<ApiResponse<TaskMonthlyResponse>> getMonthlyTasks(
             @AuthenticationPrincipal Long userId,
-            @ModelAttribute TaskMonthlyRequest request,
-            @PageableDefault(size = 31, sort = "plannedStartAt") Pageable pageable
+            @ModelAttribute TaskMonthlyRequest request
     ) {
-        TaskPageResponse response = taskService.getMonthlyTasks(userId, request, pageable);
+        TaskMonthlyResponse response = taskService.getMonthlyTasks(userId, request);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
     }

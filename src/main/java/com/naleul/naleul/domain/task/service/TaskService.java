@@ -8,8 +8,10 @@ import com.naleul.naleul.domain.generalCategory.repository.GeneralCategoryReposi
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.task.dto.request.*;
+import com.naleul.naleul.domain.task.dto.response.TaskMonthlyResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskResponse;
+import com.naleul.naleul.domain.task.dto.response.TaskWeeklyResponse;
 import com.naleul.naleul.domain.task.entity.Task;
 import com.naleul.naleul.domain.task.entity.TaskDayOfWeek;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
@@ -21,8 +23,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -133,40 +139,71 @@ public class TaskService {
         return TaskPageResponse.from(responsePage);
     }
 
-    public TaskPageResponse getWeeklyTasks(Long userId, TaskWeeklyRequest request, Pageable pageable) {
+    public TaskWeeklyResponse getWeeklyTasks(Long userId, TaskWeeklyRequest request) {
 
-        // startDate가 endDate보다 늦으면 에러
         if (request.startDate() != null && request.endDate() != null) {
             if (request.startDate().isAfter(request.endDate())) {
                 throw new IllegalArgumentException("시작일이 종료일보다 늦을 수 없습니다.");
             }
-
-            // 7일 초과 범위 방지 (선택사항 - 필요 없으면 지워도 됩니다)
             if (request.startDate().plusDays(7).isBefore(request.endDate())) {
                 throw new IllegalArgumentException("조회 범위는 최대 7일입니다.");
             }
         }
 
-        Page<Task> taskPage = taskRepository.findWeeklyTasks(
+        List<Task> tasks = taskRepository.findWeeklyTasksWithoutPage(
                 userId,
                 request.startDate(),
-                request.endDate(),
-                pageable
+                request.endDate()
         );
 
-        return TaskPageResponse.from(taskPage.map(TaskResponse::from));
+        // 요일 순서 고정 (MON → SUN)
+        List<String> dayOrder = List.of("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN");
+
+        // 요일별로 그룹핑 (task 하나가 여러 요일에 걸쳐 있을 수 있어서 flatMap)
+        Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>(); // 순서 유지
+
+        dayOrder.forEach(day -> {
+            List<TaskResponse> dayTasks = tasks.stream()
+                    .filter(task -> task.getTaskDayOfWeeks().stream()
+                            .anyMatch(tdow -> tdow.getDayOfWeek().getDayName().equals(day)))
+                    .map(TaskResponse::from)
+                    .toList();
+            tasksByDay.put(day, dayTasks);
+        });
+
+        return TaskWeeklyResponse.from(tasksByDay);
     }
 
-    public TaskPageResponse getMonthlyTasks(Long userId, TaskMonthlyRequest request, Pageable pageable) {
+    public TaskMonthlyResponse getMonthlyTasks(Long userId, TaskMonthlyRequest request) {
 
-        Page<Task> taskPage = taskRepository.findMonthlyTasks(
+        List<Task> tasks = taskRepository.findMonthlyTasksWithoutPage(
                 userId,
                 request.year(),
-                request.month(),
-                pageable
+                request.month()
         );
 
-        return TaskPageResponse.from(taskPage.map(TaskResponse::from));
+        // 해당 월의 첫날 ~ 마지막날 구하기
+        LocalDate firstDay = LocalDate.of(request.year(), request.month(), 1);
+        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth()); // 28, 29, 30, 31 자동 계산
+
+        // 날짜별로 그룹핑 (순서 유지)
+        Map<String, List<TaskResponse>> tasksByDate = new LinkedHashMap<>();
+
+        // 해당 월의 모든 날짜를 키로 먼저 세팅 (task 없는 날도 빈 배열로)
+        firstDay.datesUntil(lastDay.plusDays(1))  // 첫날부터 마지막날까지 순회
+                .forEach(date -> tasksByDate.put(date.toString(), new ArrayList<>()));
+
+        // task를 날짜별로 분류
+        tasks.forEach(task -> {
+            if (task.getPlannedStartAt() != null) {
+                String dateKey = task.getPlannedStartAt().toLocalDate().toString(); // "2024-01-15"
+                if (tasksByDate.containsKey(dateKey)) {
+                    tasksByDate.get(dateKey).add(TaskResponse.from(task));
+                }
+            }
+        });
+
+        return TaskMonthlyResponse.from(tasksByDate);
     }
 
     // ── 실제 시간 기록 ──────────────────────────────────────
