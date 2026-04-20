@@ -28,7 +28,14 @@ public enum SuccessCode {
     GOAL_UPDATED(HttpStatus.OK, "목표 카테고리 수정 성공"),
     GOAL_DELETED(HttpStatus.OK, "목표 카테고리 삭제 성공"),
     GOAL_COMPLETED(HttpStatus.OK, "목표 카테고리 완료 처리 성공"),
-    GOAL_ASSIGNED(HttpStatus.OK, "일반 카테고리 연결 성공");
+    GOAL_ASSIGNED(HttpStatus.OK, "일반 카테고리 연결 성공"),
+
+    // 일반 카테고리
+    GENERAL_CREATED(HttpStatus.CREATED, "일반 카테고리 생성 성공"),
+    GENERALS_FOUND(HttpStatus.OK, "일반 카테고리 전체 조회 성공"),
+    GENERAL_FOUND(HttpStatus.OK, "일반 카테고리 조회 성공"),
+    GENERAL_UPDATED(HttpStatus.OK, "일반 카테고리 수정 성공"),
+    GENERAL_DELETED(HttpStatus.OK, "일반 카테고리 삭제 성공");
 
     private final HttpStatus status;
     private final String message;
