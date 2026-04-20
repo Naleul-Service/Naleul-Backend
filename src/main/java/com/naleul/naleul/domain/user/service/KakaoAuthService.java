@@ -1,5 +1,7 @@
 package com.naleul.naleul.domain.user.service;
 
+import com.naleul.naleul.domain.generalCategory.service.GeneralCategoryService;
+import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.domain.user.dto.KakaoTokenResponse;
 import com.naleul.naleul.domain.user.dto.KakaoUserInfo;
@@ -26,6 +28,7 @@ public class KakaoAuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
     private final GoalCategoryService goalCategoryService;
+    private final GeneralCategoryService generalCategoryService;
 
     @Value("${kakao.client-id}")
     private String clientId;
@@ -90,7 +93,8 @@ public class KakaoAuthService {
                     );
 
                     // 신규 유저에게만 ETC 목표 자동 생성
-                    goalCategoryService.createDefaultEtcCategory(newUser);
+                    GoalCategory etcGoalCategory = goalCategoryService.createDefaultEtcCategory(newUser);
+                    generalCategoryService.createDefaultCategory(newUser, etcGoalCategory);
 
                     return newUser;
                 });
