@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isWhiteList(String path) {
-        return path.startsWith("/api/auth/") ||
+        return path.startsWith("/api/v1/auth/") ||
                 path.startsWith("/actuator/") ||
                 path.startsWith("/api/health") ||
                 path.startsWith("/swagger-ui") ||
