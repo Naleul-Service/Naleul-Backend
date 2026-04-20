@@ -19,8 +19,11 @@ public class AuthController {
     private final TokenReissueService tokenReissueService;
 
     @GetMapping("/kakao/callback")
-    public ResponseEntity<ApiResponse<LoginResponse>> kakaoCallback(@RequestParam String code) {
-        LoginResponse response = kakaoAuthService.kakaoLogin(code);
+    public ResponseEntity<ApiResponse<LoginResponse>> kakaoCallback(
+            @RequestParam String code,
+            @RequestParam String redirectUri
+    ) {
+        LoginResponse response = kakaoAuthService.kakaoLogin(code, redirectUri);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(SuccessCode.LOGIN_SUCCESS, response));

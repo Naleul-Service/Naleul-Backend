@@ -30,16 +30,13 @@ public class KakaoAuthService {
     @Value("${kakao.client-id}")
     private String clientId;
 
-    @Value("${kakao.redirect-uri}")
-    private String redirectUri;
-
     @Value("${kakao.client-secret}")
     private String clientSecret;
 
     @Transactional
-    public LoginResponse kakaoLogin(String code) {
+    public LoginResponse kakaoLogin(String code, String redirectUri) {  // redirectUri 파라미터로 받음
         // 1. 인가코드로 카카오 액세스 토큰 받기
-        KakaoTokenResponse tokenResponse = getKakaoToken(code);
+        KakaoTokenResponse tokenResponse = getKakaoToken(code, redirectUri);
 
         // 2. 액세스 토큰으로 카카오 유저 정보 받기
         KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(tokenResponse.getAccessToken());
@@ -47,7 +44,7 @@ public class KakaoAuthService {
         // 3. DB에 유저 저장 또는 조회 (없으면 회원가입, 있으면 로그인)
         User user = saveOrGetUser(kakaoUserInfo);
 
-        // 5. JWT 발급
+        // 4. JWT 발급
         String accessToken = jwtProvider.generateAccessToken(user.getUserId(), user.getUserRole());
         String refreshToken = jwtProvider.generateRefreshToken(user.getUserId());
 
@@ -56,14 +53,14 @@ public class KakaoAuthService {
         return new LoginResponse(accessToken, refreshToken, user.getUserId(), user.getUserName(), user.getUserEmail(), user.getUserRole());
     }
 
-    private KakaoTokenResponse getKakaoToken(String code) {
+    private KakaoTokenResponse getKakaoToken(String code, String redirectUri) {
         return WebClient.create("https://kauth.kakao.com")
                 .post()
                 .uri("/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
                 .bodyValue("grant_type=authorization_code"
                         + "&client_id=" + clientId
-                        + "&redirect_uri=" + redirectUri
+                        + "&redirect_uri=" + redirectUri  // 동적으로 받은 값 사용
                         + "&code=" + code
                         + "&client_secret=" + clientSecret)
                 .retrieve()
@@ -128,5 +125,4 @@ public class KakaoAuthService {
                 .bodyToMono(KakaoTokenResponse.class)
                 .block();
     }
-
 }
