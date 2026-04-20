@@ -12,6 +12,8 @@ import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.global.common.response.ErrorCode;
+import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,7 +79,7 @@ public class GeneralCategoryService {
 
         // ETC 카테고리는 수정 불가
         if (generalCategory.isDefault()) {
-            throw new IllegalStateException("기본 카테고리(ETC)는 수정할 수 없습니다.");
+            throw new CustomException(ErrorCode.GENERAL_CATEGORY_DEFAULT_CANNOT_MODIFY);
         }
 
         GoalCategory goalCategory = findGoalCategoryById(request.getGoalCategoryId());
@@ -96,7 +98,7 @@ public class GeneralCategoryService {
         GeneralCategory generalCategory = findByIdAndUser(generalCategoryId, user);
 
         if (generalCategory.isDefault()) {
-            throw new IllegalStateException("기본 카테고리(ETC)는 삭제할 수 없습니다.");
+            throw new CustomException(ErrorCode.GENERAL_CATEGORY_DEFAULT_CANNOT_DELETE);
         }
 
         generalCategoryRepository.delete(generalCategory);
@@ -106,22 +108,22 @@ public class GeneralCategoryService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     private GeneralCategory findByIdAndUser(Long id, User user) {
         // 유저 소유 검증 포함 (다른 유저 카테고리 접근 방지)
         return generalCategoryRepository.findByGeneralCategoryIdAndUser(id, user)
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
     }
 
     private GoalCategory findGoalCategoryById(Long id) {
         return goalCategoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표 카테고리입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
     }
 
     private Color findColorById(Long id) {
         return colorRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 색상입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
     }
 }

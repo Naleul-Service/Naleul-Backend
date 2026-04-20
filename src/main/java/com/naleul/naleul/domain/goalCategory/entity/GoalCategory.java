@@ -67,6 +67,9 @@ public class GoalCategory {
         this.goalCategoryStartDate = startDate;
     }
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isDefault; // 기타(ETC) 여부 판별용
+
     public void updateColor(Color color) {
         this.color = color;
     }

@@ -11,6 +11,13 @@ public enum ErrorCode {
     // Goal Category
     GOAL_CATEGORY_NAME_DUPLICATED(HttpStatus.BAD_REQUEST, "이미 존재하는 목표 카테고리 이름입니다."),
     GOAL_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 목표 카테고리입니다."),
+    GOAL_CATEGORY_DEFAULT_CANNOT_MODIFY(HttpStatus.BAD_REQUEST, "기본 카테고리(기타)는 수정할 수 없습니다."),
+    GOAL_CATEGORY_DEFAULT_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "기본 카테고리(기타)는 삭제할 수 없습니다."),
+
+    // General Category
+    GENERAL_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 일반 카테고리입니다."),
+    GENERAL_CATEGORY_DEFAULT_CANNOT_MODIFY(HttpStatus.BAD_REQUEST, "기본 카테고리(ETC)는 수정할 수 없습니다."),
+    GENERAL_CATEGORY_DEFAULT_CANNOT_DELETE(HttpStatus.BAD_REQUEST, "기본 카테고리(ETC)는 삭제할 수 없습니다."),
 
     // Color
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 색상입니다."),
@@ -19,6 +26,7 @@ public enum ErrorCode {
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
     INVALID_ENUM_VALUE(HttpStatus.BAD_REQUEST, "올바르지 않은 상태값입니다."),
     INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, "날짜 형식이 올바르지 않습니다. (yyyy-MM-dd)"),
+
     //토큰
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),

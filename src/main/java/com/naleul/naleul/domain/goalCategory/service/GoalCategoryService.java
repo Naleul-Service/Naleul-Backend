@@ -16,7 +16,6 @@ import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
 import com.naleul.naleul.global.common.response.ErrorCode;
 import com.naleul.naleul.global.exception.CustomException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,17 +88,13 @@ public class GoalCategoryService {
     // 기본 목표 카테고리 기타 추가
     @Transactional
     public GoalCategory createDefaultEtcCategory(User user) {
-
-        if (user == null) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
-
         GoalCategory etcCategory = GoalCategory.builder()
                 .user(user)
                 .color(null)                          // 기본 색상 없음 (or 기본 Color 지정)
                 .goalCategoryName("기타")
                 .goalCategoryStatus(GoalCategoryStatus.IN_PROGRESS)
                 .goalCategoryStartDate(LocalDate.now())
+                .isDefault(true)
                 .build();
 
         return goalCategoryRepository.save(etcCategory);
@@ -108,10 +103,13 @@ public class GoalCategoryService {
     // 목표 완료 처리
     @Transactional
     public GoalCategoryResponse complete(Long goalCategoryId, GoalCategoryCompleteRequest request) {
-
-        // 3번: goalCategoryId가 없는 경우
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
+
+
+        if (goalCategory.isDefault()) {
+            throw new CustomException(ErrorCode.GOAL_CATEGORY_DEFAULT_CANNOT_MODIFY);
+        }
 
         goalCategory.complete(request.getGoalCategoryEndDate(), request.getAchievement());
 
@@ -141,6 +139,10 @@ public class GoalCategoryService {
     public GoalCategoryResponse update(Long goalCategoryId, GoalCategoryUpdateRequest request) {
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
+
+        if (goalCategory.isDefault()) {
+            throw new CustomException(ErrorCode.GOAL_CATEGORY_DEFAULT_CANNOT_MODIFY);
+        }
 
         // Color 변경이 있을 때만 조회
         if (request.getColorId() != null) {
@@ -176,6 +178,10 @@ public class GoalCategoryService {
     public void delete(Long goalCategoryId) {
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
+
+        if (goalCategory.isDefault()) {
+            throw new CustomException(ErrorCode.GOAL_CATEGORY_DEFAULT_CANNOT_DELETE);
+        }
 
         goalCategory.delete();
     }
