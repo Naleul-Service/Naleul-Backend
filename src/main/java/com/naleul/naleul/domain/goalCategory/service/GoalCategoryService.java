@@ -75,6 +75,10 @@ public class GoalCategoryService {
 
     // 목표 카테고리 전체 조회 (유저별)
     public List<GoalCategoryResponse> getGoalCategories(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
         return goalCategoryRepository.findAllByUserIdWithAll(userId)
                 .stream()
                 .map(GoalCategoryResponse::from)
@@ -85,6 +89,11 @@ public class GoalCategoryService {
     // 기본 목표 카테고리 기타 추가
     @Transactional
     public GoalCategory createDefaultEtcCategory(User user) {
+
+        if (user == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
         GoalCategory etcCategory = GoalCategory.builder()
                 .user(user)
                 .color(null)                          // 기본 색상 없음 (or 기본 Color 지정)
