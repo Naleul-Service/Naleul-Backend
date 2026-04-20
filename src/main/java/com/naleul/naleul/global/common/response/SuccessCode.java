@@ -35,7 +35,15 @@ public enum SuccessCode {
     GENERALS_FOUND(HttpStatus.OK, "일반 카테고리 전체 조회 성공"),
     GENERAL_FOUND(HttpStatus.OK, "일반 카테고리 조회 성공"),
     GENERAL_UPDATED(HttpStatus.OK, "일반 카테고리 수정 성공"),
-    GENERAL_DELETED(HttpStatus.OK, "일반 카테고리 삭제 성공");
+    GENERAL_DELETED(HttpStatus.OK, "일반 카테고리 삭제 성공"),
+
+    // 할 일 카테고리
+    TASK_CREATED(HttpStatus.CREATED, "할 일 생성 성공"),
+    TASKS_FOUND(HttpStatus.OK, "할 일 전체 조회 성공"),
+    TASK_FOUND(HttpStatus.OK, "할 일 조회 성공"),
+    TASK_UPDATED(HttpStatus.OK, "할 일 수정 성공"),
+    TASK_COMPLETED(HttpStatus.OK, "할 일 실제 기록 성공"),
+    TASK_DELETED(HttpStatus.OK, "할 일 삭제 성공");
 
     private final HttpStatus status;
     private final String message;

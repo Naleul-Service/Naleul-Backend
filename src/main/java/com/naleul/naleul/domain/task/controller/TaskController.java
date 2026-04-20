@@ -1,0 +1,131 @@
+package com.naleul.naleul.domain.task.controller;
+
+import com.naleul.naleul.domain.task.dto.request.*;
+import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
+import com.naleul.naleul.domain.task.dto.response.TaskResponse;
+import com.naleul.naleul.domain.task.service.TaskService;
+import com.naleul.naleul.global.common.response.ApiResponse;
+import com.naleul.naleul.global.common.response.SuccessCode;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/tasks")
+public class TaskController {
+
+    private final TaskService taskService;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<TaskResponse>> createTask(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody TaskCreateRequest request
+    ) {
+        TaskResponse response = taskService.createTask(userId, request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(SuccessCode.TASK_CREATED, response));
+    }
+
+    @GetMapping("/{taskId}")
+    public ResponseEntity<ApiResponse<TaskResponse>> getTask(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskId
+    ) {
+        TaskResponse response = taskService.getTask(userId, taskId);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASK_FOUND, response));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getTasks(
+            @AuthenticationPrincipal Long userId
+    ) {
+        List<TaskResponse> responses = taskService.getTasksByUser(userId);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, responses));
+    }
+
+    @GetMapping("/time-range")
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getTasksByTimeRange(
+            @AuthenticationPrincipal Long userId,
+            @ModelAttribute TaskTimeRangeRequest request,
+            @PageableDefault(size = 10, sort = "plannedStartAt") Pageable pageable
+    ) {
+        TaskPageResponse response = taskService.getTasksByTimeRange(userId, request, pageable);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
+    }
+
+    @GetMapping("/daily")
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getDailyTasks(
+            @AuthenticationPrincipal Long userId,
+            @ModelAttribute TaskDailyRequest request,  // 쿼리파라미터를 객체로 바인딩
+            @PageableDefault(size = 10, sort = "plannedStartAt") Pageable pageable
+    ) {
+        TaskPageResponse response = taskService.getDailyTasks(userId, request, pageable);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
+    }
+
+    @GetMapping("/weekly")
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getWeeklyTasks(
+            @AuthenticationPrincipal Long userId,
+            @ModelAttribute TaskWeeklyRequest request,
+            @PageableDefault(size = 20, sort = "plannedStartAt") Pageable pageable
+    ) {
+        TaskPageResponse response = taskService.getWeeklyTasks(userId, request, pageable);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
+    }
+
+    @GetMapping("/monthly")
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getMonthlyTasks(
+            @AuthenticationPrincipal Long userId,
+            @ModelAttribute TaskMonthlyRequest request,
+            @PageableDefault(size = 31, sort = "plannedStartAt") Pageable pageable
+    ) {
+        TaskPageResponse response = taskService.getMonthlyTasks(userId, request, pageable);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
+    }
+
+    @PutMapping("/{taskId}")
+    public ResponseEntity<ApiResponse<TaskResponse>> updateTask(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskUpdateRequest request
+    ) {
+        TaskResponse response = taskService.updateTask(userId, taskId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASK_UPDATED, response));
+    }
+
+    // 실제 시간 기록 (PATCH: 일부만 수정)
+    @PatchMapping("/{taskId}/actual")
+    public ResponseEntity<ApiResponse<TaskResponse>> recordActual(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskUpdateActualRequest request
+    ) {
+        TaskResponse response = taskService.recordActual(userId, taskId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.TASK_COMPLETED, response));
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskId
+    ) {
+        taskService.deleteTask(userId, taskId);
+        return ResponseEntity.noContent().build();
+    }
+}
