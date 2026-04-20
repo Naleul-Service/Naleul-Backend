@@ -14,6 +14,8 @@ import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
 import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.global.common.response.ErrorCode;
+import com.naleul.naleul.global.exception.CustomException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,10 +38,16 @@ public class GoalCategoryService {
     @Transactional
     public GoalCategoryResponse create(GoalCategoryCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        // 1번: Color가 없는 경우
         Color color = colorRepository.findById(request.getColorId())
-                .orElseThrow(() -> new EntityNotFoundException("Color not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
+
+        // 2번: 동일한 goalCategoryName이 있는 경우
+        if (goalCategoryRepository.existsByUser_UserIdAndGoalCategoryName(userId, request.getGoalCategoryName())) {
+            throw new CustomException(ErrorCode.GOAL_CATEGORY_NAME_DUPLICATED);
+        }
 
         GoalCategory goalCategory = GoalCategory.builder()
                 .user(user)
@@ -52,7 +60,7 @@ public class GoalCategoryService {
         goalCategoryRepository.save(goalCategory);
 
         GoalCategory saved = goalCategoryRepository.findByIdWithAll(goalCategory.getGoalCategoryId())
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         return GoalCategoryResponse.from(saved);
     }
@@ -60,7 +68,7 @@ public class GoalCategoryService {
     // 목표 카테고리 단건 조회
     public GoalCategoryResponse getGoalCategory(Long goalCategoryId) {
         GoalCategory goalCategory = goalCategoryRepository.findByIdWithAll(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() ->new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         return GoalCategoryResponse.from(goalCategory);
     }
@@ -76,7 +84,7 @@ public class GoalCategoryService {
 
     // 기본 목표 카테고리 기타 추가
     @Transactional
-    public void createDefaultEtcCategory(User user) {
+    public GoalCategory createDefaultEtcCategory(User user) {
         GoalCategory etcCategory = GoalCategory.builder()
                 .user(user)
                 .color(null)                          // 기본 색상 없음 (or 기본 Color 지정)
@@ -85,14 +93,16 @@ public class GoalCategoryService {
                 .goalCategoryStartDate(LocalDate.now())
                 .build();
 
-        goalCategoryRepository.save(etcCategory);
+        return goalCategoryRepository.save(etcCategory);
     }
 
     // 목표 완료 처리
     @Transactional
     public GoalCategoryResponse complete(Long goalCategoryId, GoalCategoryCompleteRequest request) {
+
+        // 3번: goalCategoryId가 없는 경우
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         goalCategory.complete(request.getGoalCategoryEndDate(), request.getAchievement());
 
@@ -104,7 +114,7 @@ public class GoalCategoryService {
     public GoalCategoryResponse assignGeneralCategories(Long goalCategoryId,
                                                         GeneralCategoryAssignRequest request) {
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         List<GeneralCategory> generalCategories = generalCategoryRepository
                 .findAllById(request.getGeneralCategoryIds());
@@ -112,7 +122,7 @@ public class GoalCategoryService {
         generalCategories.forEach(generalCategory -> generalCategory.assignGoalCategory(goalCategory));
 
         GoalCategory updated = goalCategoryRepository.findByIdWithAll(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         return GoalCategoryResponse.from(updated);
     }
@@ -121,13 +131,26 @@ public class GoalCategoryService {
     @Transactional
     public GoalCategoryResponse update(Long goalCategoryId, GoalCategoryUpdateRequest request) {
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         // Color 변경이 있을 때만 조회
         if (request.getColorId() != null) {
             Color color = colorRepository.findById(request.getColorId())
-                    .orElseThrow(() -> new EntityNotFoundException("Color not found"));
+                    .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
             goalCategory.updateColor(color);
+        }
+
+        // goalCategoryName을 보낸 경우에만 중복 검증
+        if (request.getGoalCategoryName() != null) {
+            boolean isDuplicated = goalCategoryRepository
+                    .existsByUser_UserIdAndGoalCategoryNameAndGoalCategoryIdNot(
+                            goalCategory.getUser().getUserId(),
+                            request.getGoalCategoryName(),
+                            goalCategoryId  // 자기 자신은 제외
+                    );
+            if (isDuplicated) {
+                throw new CustomException(ErrorCode.GOAL_CATEGORY_NAME_DUPLICATED);
+            }
         }
 
         goalCategory.update(
@@ -143,7 +166,7 @@ public class GoalCategoryService {
     @Transactional
     public void delete(Long goalCategoryId) {
         GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("GoalCategory not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         goalCategory.delete();
     }

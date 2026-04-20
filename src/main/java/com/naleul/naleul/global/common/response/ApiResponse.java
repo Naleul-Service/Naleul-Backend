@@ -49,4 +49,13 @@ public class ApiResponse<T> {
                 .message(errorCode.getMessage())
                 .build();
     }
+
+    // 메시지를 직접 덮어쓰는 버전
+    public static <T> ApiResponse<T> fail(ErrorCode errorCode, String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .status(errorCode.getStatus())
+                .message(message)  // ErrorCode 메시지 대신 직접 받은 메시지 사용
+                .build();
+    }
 }

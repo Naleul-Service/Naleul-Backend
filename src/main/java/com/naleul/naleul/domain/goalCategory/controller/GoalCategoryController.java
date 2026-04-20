@@ -9,6 +9,7 @@ import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.global.common.response.ApiResponse;
 import com.naleul.naleul.global.common.response.SuccessCode;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,7 +71,7 @@ public class GoalCategoryController {
     @PatchMapping("/{goalCategoryId}/complete")
     public ResponseEntity<ApiResponse<GoalCategoryResponse>> complete(
             @PathVariable Long goalCategoryId,
-            @RequestBody GoalCategoryCompleteRequest request
+            @Valid @RequestBody GoalCategoryCompleteRequest request
     ) {
         GoalCategoryResponse response = goalCategoryService.complete(goalCategoryId, request);
         return ResponseEntity

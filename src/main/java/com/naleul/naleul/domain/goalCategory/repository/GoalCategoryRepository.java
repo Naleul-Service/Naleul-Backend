@@ -27,4 +27,14 @@ public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long
         WHERE goalCategory.user.userId = :userId
     """)
     List<GoalCategory> findAllByUserIdWithAll(@Param("userId") Long userId);
+
+    // 2번: 동일 유저의 동일 카테고리명 중복 체크
+    boolean existsByUser_UserIdAndGoalCategoryName(Long userId, String goalCategoryName);
+
+    // 자기 자신 제외한 중복 체크
+    boolean existsByUser_UserIdAndGoalCategoryNameAndGoalCategoryIdNot(
+            Long userId,
+            String goalCategoryName,
+            Long goalCategoryId
+    );
 }
