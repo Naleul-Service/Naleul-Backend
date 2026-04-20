@@ -17,6 +17,8 @@ import com.naleul.naleul.domain.task.entity.TaskDayOfWeek;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.global.common.response.ErrorCode;
+import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,17 +48,17 @@ public class TaskService {
     public TaskResponse createTask(Long userId, TaskCreateRequest request) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         GoalCategory goalCategory = goalCategoryRepository.findById(request.goalCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표 카테고리입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일반 카테고리입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
 
         List<WeekDay> dayOfWeeks = weekDayRepository.findByDayOfWeekIdIn(request.dayOfWeekIds());
         if (dayOfWeeks.size() != request.dayOfWeekIds().size()) {
-            throw new IllegalArgumentException("존재하지 않는 요일 ID가 포함되어 있습니다.");
+            throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
         // Task 생성 (실제 시간은 null)
@@ -86,7 +88,7 @@ public class TaskService {
     // ── 단건 조회 ──────────────────────────────────────────
     public TaskResponse getTask(Long userId, Long taskId) {
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
         return TaskResponse.from(task);
     }
 
@@ -101,7 +103,7 @@ public class TaskService {
     public TaskPageResponse getTasksByTimeRange(Long userId, TaskTimeRangeRequest request, Pageable pageable) {
 
         if (request.startTime().isAfter(request.endTime())) {
-            throw new IllegalArgumentException("시작 시간이 종료 시간보다 늦을 수 없습니다.");
+            throw new CustomException(ErrorCode.TASK_INVALID_TIME_RANGE);
         }
 
         // LocalDate + LocalTime → LocalDateTime 으로 합치기
@@ -124,7 +126,7 @@ public class TaskService {
         if (request.dayOfWeek() != null) {
             List<String> valid = List.of("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN");
             if (!valid.contains(request.dayOfWeek().toUpperCase())) {
-                throw new IllegalArgumentException("올바르지 않은 요일 값입니다. (MON~SUN)");
+                throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
             }
         }
 
@@ -143,10 +145,10 @@ public class TaskService {
 
         if (request.startDate() != null && request.endDate() != null) {
             if (request.startDate().isAfter(request.endDate())) {
-                throw new IllegalArgumentException("시작일이 종료일보다 늦을 수 없습니다.");
+                throw new CustomException(ErrorCode.TASK_INVALID_DATE_RANGE);
             }
             if (request.startDate().plusDays(7).isBefore(request.endDate())) {
-                throw new IllegalArgumentException("조회 범위는 최대 7일입니다.");
+                throw new CustomException(ErrorCode.TASK_INVALID_WEEK_RANGE);
             }
         }
 
@@ -210,7 +212,7 @@ public class TaskService {
     @Transactional
     public TaskResponse recordActual(Long userId, Long taskId, TaskUpdateActualRequest request) {
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
 
         task.recordActual(request.actualStartAt(), request.actualEndAt());
         return TaskResponse.from(task);
@@ -220,17 +222,17 @@ public class TaskService {
     public TaskResponse updateTask(Long userId, Long taskId, TaskUpdateRequest request) {
 
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
 
         GoalCategory goalCategory = goalCategoryRepository.findById(request.goalCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표 카테고리입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일반 카테고리입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
 
         List<WeekDay> weekDays = weekDayRepository.findByDayOfWeekIdIn(request.dayOfWeekIds());
         if (weekDays.size() != request.dayOfWeekIds().size()) {
-            throw new IllegalArgumentException("존재하지 않는 요일 ID가 포함되어 있습니다.");
+            throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
         // 기본 정보 수정
@@ -260,7 +262,7 @@ public class TaskService {
     @Transactional
     public void deleteTask(Long userId, Long taskId) {
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
         taskRepository.delete(task);
         // cascade + orphanRemoval로 TaskDayOfWeek도 자동 삭제
     }
