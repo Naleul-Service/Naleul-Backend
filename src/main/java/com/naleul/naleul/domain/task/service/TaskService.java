@@ -124,7 +124,7 @@ public class TaskService {
 
         // dayOfWeek 값 검증 (MON~SUN 외 값 들어오면 에러)
         if (request.dayOfWeek() != null) {
-            List<String> valid = List.of("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN");
+            List<String> valid = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
             if (!valid.contains(request.dayOfWeek().toUpperCase())) {
                 throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
             }
@@ -159,7 +159,7 @@ public class TaskService {
         );
 
         // 요일 순서 고정 (MON → SUN)
-        List<String> dayOrder = List.of("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN");
+        List<String> dayOrder = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
 
         // 요일별로 그룹핑 (task 하나가 여러 요일에 걸쳐 있을 수 있어서 flatMap)
         Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>(); // 순서 유지

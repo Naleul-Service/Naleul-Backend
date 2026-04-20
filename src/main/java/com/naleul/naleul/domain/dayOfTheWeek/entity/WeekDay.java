@@ -12,8 +12,8 @@ public class WeekDay {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dayOfWeekId;
 
-    @Column(nullable = false, unique = true, length = 3)
-    private String dayName; // "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"
+    @Column(nullable = false, unique = true, length = 10)
+    private String dayName; //'MONDAY'-1, 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'
 
     @Column(nullable = false)
     private int dayOrder; // 1=MON ~ 7=SUN (정렬용)
