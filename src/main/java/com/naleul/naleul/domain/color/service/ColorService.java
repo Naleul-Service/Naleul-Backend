@@ -43,4 +43,12 @@ public class ColorService {
                 .map(ColorResponse::from)
                 .toList();
     }
+
+    public void deleteColor(Long colorId) {
+        // 존재하지 않는 colorId면 예외 던지기
+        if (!colorRepository.existsById(colorId)) {
+            throw new CustomException(ErrorCode.COLOR_NOT_FOUND);
+        }
+        colorRepository.deleteById(colorId);
+    }
 }

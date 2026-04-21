@@ -41,4 +41,11 @@ public class ColorController {
                 .body(ApiResponse.success(SuccessCode.COLORS_FOUND, colorService.getAllColors()));
     }
 
+    @DeleteMapping("/{colorId}")
+    public ResponseEntity<ApiResponse<Void>> deleteColor(@PathVariable Long colorId) {
+        colorService.deleteColor(colorId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(SuccessCode.COLOR_DELETED, null));
+    }
 }
