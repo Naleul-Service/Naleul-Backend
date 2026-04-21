@@ -1,8 +1,8 @@
 package com.naleul.naleul.domain.generalCategory.entity;
 
-import com.naleul.naleul.domain.color.entity.Color;
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.user.entity.User;
+import com.naleul.naleul.domain.userColor.entity.UserColor;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -33,10 +33,10 @@ public class GeneralCategory {
     // FK - Color (1:1)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", unique = true)
-    private Color color;
+    private UserColor color;
 
     // ✅ 정적 팩토리 메서드 - 일반 생성
-    public static GeneralCategory create(String name, User user, GoalCategory goalCategory, Color color) {
+    public static GeneralCategory create(String name, User user, GoalCategory goalCategory, UserColor color) {
         GeneralCategory generalCategory = new GeneralCategory();
         generalCategory.generalCategoryName = name;
         generalCategory.user = user;
@@ -57,7 +57,7 @@ public class GeneralCategory {
     }
 
     // ✅ 수정 메서드 (setter 대신 도메인 메서드)
-    public void update(String name, GoalCategory goalCategory, Color color) {
+    public void update(String name, GoalCategory goalCategory, UserColor color) {
         this.generalCategoryName = name;
         this.goalCategory = goalCategory;
         this.color = color;

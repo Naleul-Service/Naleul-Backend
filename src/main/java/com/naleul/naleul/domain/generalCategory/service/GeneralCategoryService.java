@@ -1,8 +1,6 @@
 package com.naleul.naleul.domain.generalCategory.service;
 
 
-import com.naleul.naleul.domain.color.entity.Color;
-import com.naleul.naleul.domain.color.repository.ColorRepository;
 import com.naleul.naleul.domain.generalCategory.dto.request.GeneralCategoryCreateRequest;
 import com.naleul.naleul.domain.generalCategory.dto.request.GeneralCategoryUpdateRequest;
 import com.naleul.naleul.domain.generalCategory.dto.response.GeneralCategoryResponse;
@@ -12,6 +10,8 @@ import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.domain.userColor.entity.UserColor;
+import com.naleul.naleul.domain.userColor.repository.UserColorRepository;
 import com.naleul.naleul.global.common.response.ErrorCode;
 import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class GeneralCategoryService {
 
     private final GeneralCategoryRepository generalCategoryRepository;
     private final GoalCategoryRepository goalCategoryRepository;
-    private final ColorRepository colorRepository;
+    private final UserColorRepository userColorRepository;
     private final UserRepository userRepository;
 
     // 회원가입 시 ETC 자동 생성 (UserService에서 호출)
@@ -59,7 +59,7 @@ public class GeneralCategoryService {
     public GeneralCategoryResponse create(Long userId, GeneralCategoryCreateRequest request) {
         User user = findUserById(userId);
         GoalCategory goalCategory = findGoalCategoryById(request.getGoalCategoryId());
-        Color color = request.getColorId() != null ? findColorById(request.getColorId()) : null;
+        UserColor color = request.getColorId() != null ? findColorById(request.getColorId()) : null;
 
         GeneralCategory generalCategory = GeneralCategory.create(
                 request.getGeneralCategoryName(),
@@ -83,7 +83,7 @@ public class GeneralCategoryService {
         }
 
         GoalCategory goalCategory = findGoalCategoryById(request.getGoalCategoryId());
-        Color color = request.getColorId() != null ? findColorById(request.getColorId()) : null;
+        UserColor color = request.getColorId() != null ? findColorById(request.getColorId()) : null;
 
         generalCategory.update(request.getGeneralCategoryName(), goalCategory, color);
 
@@ -122,8 +122,8 @@ public class GeneralCategoryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
     }
 
-    private Color findColorById(Long id) {
-        return colorRepository.findById(id)
+    private UserColor findColorById(Long id) {
+        return userColorRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
     }
 }

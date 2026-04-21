@@ -1,8 +1,6 @@
 package com.naleul.naleul.domain.userColor.repository;
 
 
-import com.naleul.naleul.domain.color.entity.Color;
-import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.userColor.entity.UserColor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,5 +13,5 @@ public interface UserColorRepository extends JpaRepository<UserColor, Long> {
 
     Optional<UserColor> findByUserColorIdAndUser_UserId(Long userColorId, Long userId);
 
-    boolean existsByUser_UserIdAndColor_ColorCode(Long userId, String colorCode);
+    boolean existsByUser_UserIdAndColorCode(Long userId, String colorCode);
 }

@@ -1,9 +1,9 @@
 package com.naleul.naleul.domain.goalCategory.entity;
 
-import com.naleul.naleul.domain.color.entity.Color;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
 import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
 import com.naleul.naleul.domain.user.entity.User;
+import com.naleul.naleul.domain.userColor.entity.UserColor;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +33,7 @@ public class GoalCategory {
     // FK - Color (1:1)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", unique = true)
-    private Color color;
+    private UserColor userColor;
 
     @Column(nullable = false)
     private String goalCategoryName;
@@ -70,7 +70,7 @@ public class GoalCategory {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isDefault; // 기타(ETC) 여부 판별용
 
-    public void updateColor(Color color) {
-        this.color = color;
+    public void updateColor(UserColor color) {
+        this.userColor = color;
     }
 }

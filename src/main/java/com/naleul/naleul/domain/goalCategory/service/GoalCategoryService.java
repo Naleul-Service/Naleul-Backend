@@ -1,7 +1,5 @@
 package com.naleul.naleul.domain.goalCategory.service;
 
-import com.naleul.naleul.domain.color.entity.Color;
-import com.naleul.naleul.domain.color.repository.ColorRepository;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
 import com.naleul.naleul.domain.generalCategory.repository.GeneralCategoryRepository;
 import com.naleul.naleul.domain.goalCategory.dto.request.GeneralCategoryAssignRequest;
@@ -14,6 +12,8 @@ import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
 import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.domain.userColor.entity.UserColor;
+import com.naleul.naleul.domain.userColor.repository.UserColorRepository;
 import com.naleul.naleul.global.common.response.ErrorCode;
 import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class GoalCategoryService {
 
     private final GoalCategoryRepository goalCategoryRepository;
     private final GeneralCategoryRepository generalCategoryRepository;
-    private final ColorRepository colorRepository;
+    private final UserColorRepository userColorRepository;
     private final UserRepository userRepository;
 
     // 목표 카테고리 생성
@@ -40,7 +40,7 @@ public class GoalCategoryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 1번: Color가 없는 경우
-        Color color = colorRepository.findById(request.getColorId())
+        UserColor color = userColorRepository.findById(request.getColorId())
                 .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
 
         // 2번: 동일한 goalCategoryName이 있는 경우
@@ -50,7 +50,7 @@ public class GoalCategoryService {
 
         GoalCategory goalCategory = GoalCategory.builder()
                 .user(user)
-                .color(color)
+                .userColor(color)
                 .goalCategoryName(request.getGoalCategoryName())
                 .goalCategoryStatus(request.getGoalCategoryStatus())
                 .goalCategoryStartDate(request.getGoalCategoryStartDate())
@@ -90,7 +90,7 @@ public class GoalCategoryService {
     public GoalCategory createDefaultEtcCategory(User user) {
         GoalCategory etcCategory = GoalCategory.builder()
                 .user(user)
-                .color(null)                          // 기본 색상 없음 (or 기본 Color 지정)
+                .userColor(null)                          // 기본 색상 없음 (or 기본 Color 지정)
                 .goalCategoryName("기타")
                 .goalCategoryStatus(GoalCategoryStatus.IN_PROGRESS)
                 .goalCategoryStartDate(LocalDate.now())
@@ -146,7 +146,7 @@ public class GoalCategoryService {
 
         // Color 변경이 있을 때만 조회
         if (request.getColorId() != null) {
-            Color color = colorRepository.findById(request.getColorId())
+            UserColor color = userColorRepository.findById(request.getColorId())
                     .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
             goalCategory.updateColor(color);
         }

@@ -30,8 +30,8 @@ public class GoalCategoryResponse {
                 .goalCategoryStartDate(goalCategory.getGoalCategoryStartDate())
                 .goalCategoryEndDate(goalCategory.getGoalCategoryEndDate())
                 .achievement(goalCategory.getAchievement())
-                .colorCode(goalCategory.getColor() != null
-                        ? goalCategory.getColor().getColorCode()
+                .colorCode(goalCategory.getUserColor() != null
+                        ? goalCategory.getUserColor().getColorCode()
                         : null)
                 .generalCategories(goalCategory.getGeneralCategories() != null
                         ? goalCategory.getGeneralCategories().stream()

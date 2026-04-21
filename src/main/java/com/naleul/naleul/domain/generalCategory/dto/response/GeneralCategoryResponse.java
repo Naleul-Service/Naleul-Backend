@@ -19,6 +19,6 @@ public class GeneralCategoryResponse {
         this.isDefault = generalCategory.isDefault();
         this.goalCategoryId = generalCategory.getGoalCategory().getGoalCategoryId();
         this.goalCategoryName = generalCategory.getGoalCategory().getGoalCategoryName();
-        this.colorId = generalCategory.getColor() != null ? generalCategory.getColor().getColorId() : null;
+        this.colorId = generalCategory.getColor() != null ? generalCategory.getColor().getUserColorId() : null;
     }
 }

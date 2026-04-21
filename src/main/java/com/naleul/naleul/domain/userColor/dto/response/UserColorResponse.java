@@ -1,21 +1,21 @@
 package com.naleul.naleul.domain.userColor.dto.response;
 
 import com.naleul.naleul.domain.userColor.entity.UserColor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class UserColorResponse {
-    private Long colorId;
+    private Long userColorId;
     private String colorCode;
-    private boolean defaultColor;
-
-    private UserColorResponse() {}
+    private boolean isDefault;
 
     public static UserColorResponse from(UserColor userColor) {
-        UserColorResponse response = new UserColorResponse();
-        response.colorId = userColor.getColor().getColorId();
-        response.colorCode = userColor.getColor().getColorCode();
-        response.defaultColor = userColor.isDefaultColor();
-        return response;
+        return UserColorResponse.builder()
+                .userColorId(userColor.getUserColorId())
+                .colorCode(userColor.getColorCode())
+                .isDefault(userColor.isDefault())
+                .build();
     }
 }

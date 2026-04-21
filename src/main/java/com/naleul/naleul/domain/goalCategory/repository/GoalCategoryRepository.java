@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long> {
     @Query("""
         SELECT goalCategory FROM GoalCategory goalCategory
-        LEFT JOIN FETCH goalCategory.color
+        LEFT JOIN FETCH goalCategory.userColor
         LEFT JOIN FETCH goalCategory.generalCategories generalCategory
         LEFT JOIN FETCH generalCategory.color
         WHERE goalCategory.goalCategoryId = :goalCategoryId
@@ -21,7 +21,7 @@ public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long
     // ✅ 유저별 전체 조회 (fetch join)
     @Query("""
         SELECT goalCategory FROM GoalCategory goalCategory
-        LEFT JOIN FETCH goalCategory.color
+        LEFT JOIN FETCH goalCategory.userColor
         LEFT JOIN FETCH goalCategory.generalCategories generalCategory
         LEFT JOIN FETCH generalCategory.color
         WHERE goalCategory.user.userId = :userId

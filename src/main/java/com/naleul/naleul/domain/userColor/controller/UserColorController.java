@@ -1,20 +1,11 @@
 package com.naleul.naleul.domain.userColor.controller;
 
-// domain/userColor/controller/UserColorController.java
-
-import com.naleul.naleul.domain.color.dto.ColorResponse;
-import com.naleul.naleul.domain.color.entity.Color;
-import com.naleul.naleul.domain.user.entity.User;
-import com.naleul.naleul.domain.user.repository.UserRepository;
 import com.naleul.naleul.domain.userColor.dto.request.UserColorAddRequest;
 import com.naleul.naleul.domain.userColor.dto.response.UserColorResponse;
 import com.naleul.naleul.domain.userColor.service.UserColorService;
 import com.naleul.naleul.global.common.response.ApiResponse;
-import com.naleul.naleul.global.common.response.ErrorCode;
 import com.naleul.naleul.global.common.response.SuccessCode;
-import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;

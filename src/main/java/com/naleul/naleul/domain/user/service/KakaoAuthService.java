@@ -94,12 +94,9 @@ public class KakaoAuthService {
                                     .build()
                     );
 
-                    // 신규 유저에게만 ETC 목표 자동 생성
                     GoalCategory etcGoalCategory = goalCategoryService.createDefaultEtcCategory(newUser);
                     generalCategoryService.createDefaultCategory(newUser, etcGoalCategory);
-
-                    // 신규 유저에게 기본 색상 21개 지급 (추가)
-                    userColorService.assignDefaultColors(newUser.getUserId());
+                    userColorService.createDefaultColors(newUser); // 수정
 
                     return newUser;
                 });

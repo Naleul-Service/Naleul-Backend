@@ -5,7 +5,6 @@ import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCompleteReq
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCreateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryUpdateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.response.GoalCategoryResponse;
-import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.global.common.response.ApiResponse;
 import com.naleul.naleul.global.common.response.SuccessCode;

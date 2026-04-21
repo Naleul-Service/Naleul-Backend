@@ -2,20 +2,16 @@ package com.naleul.naleul.domain.userColor.entity;
 
 // domain/color/entity/UserColor.java
 
-import com.naleul.naleul.domain.color.entity.Color;
 import com.naleul.naleul.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 // UserColor.java
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "user_color")
 public class UserColor {
 
@@ -27,11 +23,9 @@ public class UserColor {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "color_id", nullable = false)
-    private Color color;
+    @Column(nullable = false, length = 7)
+    private String colorCode;
 
     @Column(nullable = false)
-    @Builder.Default
-    private boolean defaultColor = false;  // isDefault → defaultColor
+    private boolean isDefault;
 }

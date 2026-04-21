@@ -32,8 +32,8 @@ public record TaskResponse(
                 .toList();
 
         // color가 null일 수 있어서 null-safe하게 처리
-        String goalColorCode = task.getGoalCategory().getColor() != null
-                ? task.getGoalCategory().getColor().getColorCode()
+        String goalColorCode = task.getGoalCategory().getUserColor() != null
+                ? task.getGoalCategory().getUserColor().getColorCode()
                 : null;
 
         String generalColorCode = task.getGeneralCategory().getColor() != null

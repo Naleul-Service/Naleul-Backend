@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserColorAddRequest {
-    private String colorCode;  // colorId → colorCode로 변경
+    private String colorCode;
 }
