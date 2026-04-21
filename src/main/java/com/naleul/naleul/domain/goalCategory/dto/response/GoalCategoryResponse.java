@@ -52,7 +52,9 @@ public class GoalCategoryResponse {
             return GeneralCategoryInfo.builder()
                     .generalCategoryId(generalCategory.getGeneralCategoryId())
                     .generalCategoryName(generalCategory.getGeneralCategoryName())
-                    .colorCode(generalCategory.getColor().getColorCode())
+                    .colorCode(generalCategory.getColor() != null
+                            ? generalCategory.getColor().getColorCode()
+                            : null)  // ✅
                     .build();
         }
     }
