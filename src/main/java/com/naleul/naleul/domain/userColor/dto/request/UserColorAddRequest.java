@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// domain/userColor/dto/UserColorAddRequest.java
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

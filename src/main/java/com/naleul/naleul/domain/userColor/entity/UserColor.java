@@ -6,7 +6,6 @@ import com.naleul.naleul.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-// UserColor.java
 @Entity
 @Getter
 @Builder
