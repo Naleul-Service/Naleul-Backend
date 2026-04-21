@@ -265,6 +265,8 @@ public class TaskService {
         // 요일 교체 (기존 전부 삭제 후 새로 추가)
         // orphanRemoval = true 이기 때문에 clear()하면 DB에서도 삭제됨
         task.getTaskDayOfWeeks().clear();
+        taskRepository.flush();
+
         weekDays.forEach(day ->
                 task.getTaskDayOfWeeks().add(
                         TaskDayOfWeek.builder().task(task).dayOfWeek(day).build()

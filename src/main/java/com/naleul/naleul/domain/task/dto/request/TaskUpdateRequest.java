@@ -25,7 +25,6 @@ public record TaskUpdateRequest(
         LocalDateTime plannedStartAt,
         LocalDateTime plannedEndAt,
 
-        @NotEmpty(message = "요일은 최소 1개 이상 선택해야 합니다.")
         List<Long> dayOfWeekIds,
 
         boolean defaultSettingStatus
