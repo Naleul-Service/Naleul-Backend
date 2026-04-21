@@ -31,8 +31,8 @@ public class GoalCategory {
     private User user;
 
     // FK - Color (1:1)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "color_id", unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "color_id")
     private UserColor userColor;
 
     @Column(nullable = false)

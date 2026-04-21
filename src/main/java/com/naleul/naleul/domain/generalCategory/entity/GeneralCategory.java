@@ -31,8 +31,8 @@ public class GeneralCategory {
     private GoalCategory goalCategory;
 
     // FK - Color (1:1)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "color_id", unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "color_id")
     private UserColor color;
 
     // ✅ 정적 팩토리 메서드 - 일반 생성
