@@ -78,4 +78,42 @@ public record TaskResponse(
             );
         }
     }
+
+    public static TaskResponse fromWithDateFilter(Task task, LocalDate date) {
+        List<String> days = task.getTaskDayOfWeeks().stream()
+                .map(tdow -> tdow.getDayOfWeek().getDayName())
+                .toList();
+
+        String goalColorCode = task.getGoalCategory().getUserColor() != null
+                ? task.getGoalCategory().getUserColor().getColorCode()
+                : null;
+
+        String generalColorCode = task.getGeneralCategory().getColor() != null
+                ? task.getGeneralCategory().getColor().getColorCode()
+                : null;
+
+        // 해당 날짜의 actual만 필터링
+        List<TaskActualResponse> actuals = task.getTaskActuals().stream()
+                .filter(a -> date == null || a.getActualDate().equals(date))
+                .map(TaskActualResponse::from)
+                .toList();
+
+        return new TaskResponse(
+                task.getTaskId(),
+                task.getTaskName(),
+                task.getTaskPriority(),
+                task.getGoalCategory().getGoalCategoryId(),
+                task.getGoalCategory().getGoalCategoryName(),
+                goalColorCode,
+                task.getGeneralCategory().getGeneralCategoryId(),
+                task.getGeneralCategory().getGeneralCategoryName(),
+                generalColorCode,
+                task.getPlannedStartAt(),
+                task.getPlannedEndAt(),
+                task.getPlannedDurationMinutes(),
+                task.isDefaultSettingStatus(),
+                days,
+                actuals
+        );
+    }
 }

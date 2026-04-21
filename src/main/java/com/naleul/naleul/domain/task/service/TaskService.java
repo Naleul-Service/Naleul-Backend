@@ -203,12 +203,22 @@ public class TaskService {
 
         List<String> dayOrder = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
 
+        // startDate 기준으로 각 요일의 실제 날짜 계산
+        Map<String, LocalDate> dayToDate = new LinkedHashMap<>();
+        if (request.startDate() != null) {
+            for (int i = 0; i < dayOrder.size(); i++) {
+                dayToDate.put(dayOrder.get(i), request.startDate().plusDays(i));
+            }
+        }
+
         Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>();
         dayOrder.forEach(day -> {
+            LocalDate dayDate = dayToDate.get(day);
+
             List<TaskResponse> dayTasks = tasks.stream()
                     .filter(task -> task.getTaskDayOfWeeks().stream()
                             .anyMatch(tdow -> tdow.getDayOfWeek().getDayName().equals(day)))
-                    .map(TaskResponse::from)
+                    .map(task -> TaskResponse.fromWithDateFilter(task, dayDate)) // 날짜 필터 추가
                     .toList();
             tasksByDay.put(day, dayTasks);
         });
