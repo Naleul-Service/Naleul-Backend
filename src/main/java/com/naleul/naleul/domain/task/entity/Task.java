@@ -54,10 +54,13 @@ public class Task {
     private LocalDateTime plannedEndAt;
     private Long plannedDurationMinutes; // 분 단위
 
-    // 실제 시간 (생성 시 null, 나중에 업데이트)
     private LocalDateTime actualStartAt;
     private LocalDateTime actualEndAt;
     private Long actualDurationMinutes;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<TaskActual> taskActuals = new ArrayList<>();
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean defaultSettingStatus;

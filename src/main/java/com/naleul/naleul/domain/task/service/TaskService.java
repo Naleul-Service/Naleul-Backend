@@ -13,8 +13,10 @@ import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskWeeklyResponse;
 import com.naleul.naleul.domain.task.entity.Task;
+import com.naleul.naleul.domain.task.entity.TaskActual;
 import com.naleul.naleul.domain.task.entity.TaskDayOfWeek;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
+import com.naleul.naleul.domain.task.repository.TaskActualRepository;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
@@ -43,6 +45,7 @@ public class TaskService {
     private final GoalCategoryRepository goalCategoryRepository;
     private final GeneralCategoryRepository generalCategoryRepository;
     private final WeekDayRepository weekDayRepository;
+    private final TaskActualRepository taskActualRepository;
 
     // ── 생성 ──────────────────────────────────────────────
     @Transactional
@@ -229,8 +232,21 @@ public class TaskService {
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
 
-        task.recordActual(request.actualStartAt(), request.actualEndAt());
-        return TaskResponse.from(task);
+        TaskActual actual = taskActualRepository
+                .findByTaskTaskIdAndActualDate(taskId, request.actualDate())
+                .orElse(TaskActual.builder()
+                        .task(task)
+                        .actualDate(request.actualDate())
+                        .build());
+
+        actual.update(request.actualStartAt(), request.actualEndAt());
+        taskActualRepository.save(actual);
+
+        // save 후 task 다시 조회 (taskActuals 최신 상태 반영)
+        Task updatedTask = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
+
+        return TaskResponse.from(updatedTask);
     }
 
     @Transactional

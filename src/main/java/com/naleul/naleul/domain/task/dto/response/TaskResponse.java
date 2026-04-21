@@ -1,9 +1,10 @@
 package com.naleul.naleul.domain.task.dto.response;
 
-
 import com.naleul.naleul.domain.task.entity.Task;
+import com.naleul.naleul.domain.task.entity.TaskActual;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,18 +21,15 @@ public record TaskResponse(
         LocalDateTime plannedStartAt,
         LocalDateTime plannedEndAt,
         Long plannedDurationMinutes,
-        LocalDateTime actualStartAt,
-        LocalDateTime actualEndAt,
-        Long actualDurationMinutes,
         boolean defaultSettingStatus,
-        List<String> dayNames // ["MONDAY", "WED", "FRI"]
+        List<String> dayNames,
+        List<TaskActualResponse> actuals
 ) {
     public static TaskResponse from(Task task) {
         List<String> days = task.getTaskDayOfWeeks().stream()
                 .map(tdow -> tdow.getDayOfWeek().getDayName())
                 .toList();
 
-        // color가 null일 수 있어서 null-safe하게 처리
         String goalColorCode = task.getGoalCategory().getUserColor() != null
                 ? task.getGoalCategory().getUserColor().getColorCode()
                 : null;
@@ -40,24 +38,44 @@ public record TaskResponse(
                 ? task.getGeneralCategory().getColor().getColorCode()
                 : null;
 
+        List<TaskActualResponse> actuals = task.getTaskActuals().stream()
+                .map(TaskActualResponse::from)
+                .toList();
+
         return new TaskResponse(
                 task.getTaskId(),
                 task.getTaskName(),
                 task.getTaskPriority(),
                 task.getGoalCategory().getGoalCategoryId(),
                 task.getGoalCategory().getGoalCategoryName(),
-                goalColorCode,           // 추가
+                goalColorCode,
                 task.getGeneralCategory().getGeneralCategoryId(),
                 task.getGeneralCategory().getGeneralCategoryName(),
                 generalColorCode,
                 task.getPlannedStartAt(),
                 task.getPlannedEndAt(),
                 task.getPlannedDurationMinutes(),
-                task.getActualStartAt(),
-                task.getActualEndAt(),
-                task.getActualDurationMinutes(),
                 task.isDefaultSettingStatus(),
-                days
+                days,
+                actuals
         );
+    }
+
+    public record TaskActualResponse(
+            Long taskActualId,
+            LocalDate actualDate,
+            LocalDateTime actualStartAt,
+            LocalDateTime actualEndAt,
+            Long actualDurationMinutes
+    ) {
+        public static TaskActualResponse from(TaskActual actual) {
+            return new TaskActualResponse(
+                    actual.getTaskActualId(),
+                    actual.getActualDate(),
+                    actual.getActualStartAt(),
+                    actual.getActualEndAt(),
+                    actual.getActualDurationMinutes()
+            );
+        }
     }
 }
