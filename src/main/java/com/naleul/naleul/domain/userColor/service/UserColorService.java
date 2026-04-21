@@ -52,16 +52,17 @@ public class UserColorService {
                 .toList();
     }
 
-    // 유저가 색상 추가
+    // 유저가 커스텀 색상 추가
     @Transactional
-    public void addColorToUser(User user, Long colorId) {
-        Color color = colorRepository.findById(colorId)
-                .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
+    public void addColorToUser(User user, String colorCode) {
+        // 1. color 테이블에 색상 저장
+        Color color = colorRepository.save(
+                Color.builder()
+                        .colorCode(colorCode)
+                        .build()
+        );
 
-        if (userColorRepository.existsByUserAndColor(user, color)) {
-            throw new CustomException(ErrorCode.COLOR_ALREADY_EXISTS); // 중복 방지
-        }
-
+        // 2. user_color에 연결
         userColorRepository.save(UserColor.builder()
                 .user(user)
                 .color(color)
