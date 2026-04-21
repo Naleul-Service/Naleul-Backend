@@ -170,18 +170,40 @@ public class TaskService {
             }
         }
 
+        // priority String → enum 변환
+        TaskPriority priority = null;
+        if (request.priority() != null) {
+            try {
+                priority = TaskPriority.valueOf(request.priority().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CustomException(ErrorCode.INVALID_ENUM_VALUE);
+            }
+        }
+
+        // dayOfWeek 값 검증
+        String dayOfWeek = null;
+        if (request.dayOfWeek() != null) {
+            List<String> valid = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
+            String upper = request.dayOfWeek().toUpperCase();
+            if (!valid.contains(upper)) {
+                throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
+            }
+            dayOfWeek = upper;
+        }
+
         List<Task> tasks = taskRepository.findWeeklyTasksWithoutPage(
                 userId,
                 request.startDate(),
-                request.endDate()
+                request.endDate(),
+                request.goalCategoryId(),
+                request.generalCategoryId(),
+                priority,
+                dayOfWeek
         );
 
-        // 요일 순서 고정 (MON → SUN)
         List<String> dayOrder = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
 
-        // 요일별로 그룹핑 (task 하나가 여러 요일에 걸쳐 있을 수 있어서 flatMap)
-        Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>(); // 순서 유지
-
+        Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>();
         dayOrder.forEach(day -> {
             List<TaskResponse> dayTasks = tasks.stream()
                     .filter(task -> task.getTaskDayOfWeeks().stream()

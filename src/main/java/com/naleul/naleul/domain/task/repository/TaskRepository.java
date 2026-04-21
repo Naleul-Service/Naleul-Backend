@@ -138,20 +138,28 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     );
 
     @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
-        AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
-        ORDER BY t.plannedStartAt ASC
-    """)
+    SELECT DISTINCT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    JOIN FETCH t.taskDayOfWeeks tdow
+    JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
+    AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
+    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+    AND (:priority IS NULL OR t.taskPriority = :priority)
+    AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
+    ORDER BY t.plannedStartAt ASC
+""")
     List<Task> findWeeklyTasksWithoutPage(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
+            @Param("endDate") LocalDate endDate,
+            @Param("goalCategoryId") Long goalCategoryId,
+            @Param("generalCategoryId") Long generalCategoryId,
+            @Param("priority") TaskPriority priority,
+            @Param("dayOfWeek") String dayOfWeek
     );
 
     @Query("""

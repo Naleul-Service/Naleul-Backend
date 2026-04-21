@@ -7,8 +7,13 @@ import java.time.LocalDate;
 public record TaskWeeklyRequest(
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-        LocalDate startDate,   // 예: 2024-01-15 (월요일)
+        LocalDate startDate,
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-        LocalDate endDate      // 예: 2024-01-21 (일요일)
+        LocalDate endDate,
+
+        Long goalCategoryId,
+        Long generalCategoryId,
+        String priority,
+        String dayOfWeek        // 예: MONDAY, TUESDAY ...
 ) {}
