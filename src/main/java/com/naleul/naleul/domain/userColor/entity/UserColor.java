@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// UserColor.java
 @Entity
 @Getter
 @Builder
@@ -32,5 +33,5 @@ public class UserColor {
 
     @Column(nullable = false)
     @Builder.Default
-    private boolean isDefault = false;  // 기본 제공 색상 여부
+    private boolean defaultColor = false;  // isDefault → defaultColor
 }

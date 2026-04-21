@@ -20,4 +20,8 @@ public class Color {
 
     @Column(nullable = false)
     private String colorCode;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean systemColor = false;  // 시스템 기본 제공 색상 여부
 }

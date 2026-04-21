@@ -99,7 +99,7 @@ public class KakaoAuthService {
                     generalCategoryService.createDefaultCategory(newUser, etcGoalCategory);
 
                     // 신규 유저에게 기본 색상 21개 지급 (추가)
-                    userColorService.assignDefaultColors(newUser);
+                    userColorService.assignDefaultColors(newUser.getUserId());
 
                     return newUser;
                 });

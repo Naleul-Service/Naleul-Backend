@@ -6,6 +6,8 @@ import com.naleul.naleul.domain.color.dto.ColorResponse;
 import com.naleul.naleul.domain.color.entity.Color;
 import com.naleul.naleul.domain.color.repository.ColorRepository;
 import com.naleul.naleul.domain.user.entity.User;
+import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.domain.userColor.dto.response.UserColorResponse;
 import com.naleul.naleul.domain.userColor.entity.UserColor;
 import com.naleul.naleul.domain.userColor.repository.UserColorRepository;
 import com.naleul.naleul.global.common.response.ErrorCode;
@@ -15,68 +17,72 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserColorService {
 
     private final UserColorRepository userColorRepository;
     private final ColorRepository colorRepository;
+    private final UserRepository userRepository;
 
-    // 기본 색상 ID 목록 (data.sql과 일치해야 함)
-    private static final List<Long> DEFAULT_COLOR_IDS =
-            List.of(1L,2L,3L,4L,5L,6L,7L,8L,9L,10L,
-                    11L,12L,13L,14L,15L,16L,17L,18L,19L,20L,21L);
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
 
     @Transactional
-    public void assignDefaultColors(User user) {
-        List<Color> defaultColors = colorRepository.findAllById(DEFAULT_COLOR_IDS);
+    public void assignDefaultColors(Long userId) {
+        User user = getUser(userId);
+        List<Color> defaultColors = colorRepository.findAllBySystemColor(true);
 
         List<UserColor> userColors = defaultColors.stream()
                 .map(color -> UserColor.builder()
                         .user(user)
                         .color(color)
-                        .isDefault(true)
+                        .defaultColor(true)
                         .build())
                 .toList();
 
         userColorRepository.saveAll(userColors);
     }
 
-    // 유저의 색상 목록 조회
-    @Transactional(readOnly = true)
-    public List<ColorResponse> getUserColors(User user) {
-        return userColorRepository.findByUser(user)
+    public List<UserColorResponse> getUserColors(Long userId) {
+        return userColorRepository.findByUser_UserId(userId)
                 .stream()
-                .map(userColor -> ColorResponse.from(userColor.getColor()))
+                .map(UserColorResponse::from)
                 .toList();
     }
 
-    // 유저가 커스텀 색상 추가
     @Transactional
-    public void addColorToUser(User user, String colorCode) {
-        // 1. color 테이블에 색상 저장
+    public void addColorToUser(Long userId, String colorCode) {
+        if (userColorRepository.existsByUser_UserIdAndColor_ColorCode(userId, colorCode)) {
+            throw new CustomException(ErrorCode.COLOR_ALREADY_EXISTS);
+        }
+
+        User user = getUser(userId);
+
         Color color = colorRepository.save(
                 Color.builder()
                         .colorCode(colorCode)
                         .build()
         );
 
-        // 2. user_color에 연결
         userColorRepository.save(UserColor.builder()
                 .user(user)
                 .color(color)
-                .isDefault(false)
+                .defaultColor(false)
                 .build());
     }
 
-    // 유저의 색상 삭제
+
     @Transactional
-    public void deleteUserColor(User user, Long userColorId) {
-        UserColor userColor = userColorRepository.findById(userColorId)
+    public void deleteUserColor(Long userId, Long userColorId) {
+        UserColor userColor = userColorRepository
+                .findByUserColorIdAndUser_UserId(userColorId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
 
-        if (userColor.isDefault()) {
+        if (userColor.isDefaultColor()) {
             throw new CustomException(ErrorCode.DEFAULT_COLOR_CANNOT_BE_DELETED);
         }
 
