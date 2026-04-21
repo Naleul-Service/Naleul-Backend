@@ -29,6 +29,8 @@ public enum ErrorCode {
 
     // Color
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 색상입니다."),
+    COLOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 색상입니다."),
+    DEFAULT_COLOR_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST, "기본 색상은 삭제할 수 없습니다."),
 
     // Validation
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),

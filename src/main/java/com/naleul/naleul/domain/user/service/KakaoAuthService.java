@@ -11,6 +11,7 @@ import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.enums.UserRole;
 import com.naleul.naleul.domain.user.repository.RefreshTokenRepository;
 import com.naleul.naleul.domain.user.repository.UserRepository;
+import com.naleul.naleul.domain.userColor.service.UserColorService;
 import com.naleul.naleul.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,7 @@ public class KakaoAuthService {
     private final JwtProvider jwtProvider;
     private final GoalCategoryService goalCategoryService;
     private final GeneralCategoryService generalCategoryService;
+    private final UserColorService userColorService;
 
     @Value("${kakao.client-id}")
     private String clientId;
@@ -95,6 +97,9 @@ public class KakaoAuthService {
                     // 신규 유저에게만 ETC 목표 자동 생성
                     GoalCategory etcGoalCategory = goalCategoryService.createDefaultEtcCategory(newUser);
                     generalCategoryService.createDefaultCategory(newUser, etcGoalCategory);
+
+                    // 신규 유저에게 기본 색상 21개 지급 (추가)
+                    userColorService.assignDefaultColors(newUser);
 
                     return newUser;
                 });
