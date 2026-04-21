@@ -40,28 +40,46 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("userId") Long userId
     );
 
-    // 날짜 + 요일 필터 (동적 조건 - 둘 다 nullable)
-    @Query("""
-    SELECT DISTINCT t FROM Task t
-    JOIN FETCH t.goalCategory
-    JOIN FETCH t.generalCategory
-    JOIN FETCH t.taskDayOfWeeks tdow
-    JOIN FETCH tdow.dayOfWeek
-    WHERE t.user.userId = :userId
-    AND (:date IS NULL OR CAST(t.plannedStartAt AS date) = :date)
-    AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
-    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-    AND (:priority IS NULL OR t.taskPriority = :priority)
-    ORDER BY t.plannedStartAt ASC
-""")
+    @Query(
+            value = """
+        SELECT DISTINCT t FROM Task t
+        JOIN FETCH t.goalCategory
+        JOIN FETCH t.generalCategory
+        JOIN FETCH t.taskDayOfWeeks tdow
+        JOIN FETCH tdow.dayOfWeek
+        WHERE t.user.userId = :userId
+        AND (
+            (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
+            OR
+            (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+        )
+        AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+        AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+        AND (:priority IS NULL OR t.taskPriority = :priority)
+        ORDER BY t.plannedStartAt ASC
+    """,
+            countQuery = """
+        SELECT COUNT(DISTINCT t) FROM Task t
+        JOIN t.taskDayOfWeeks tdow
+        JOIN tdow.dayOfWeek
+        WHERE t.user.userId = :userId
+        AND (
+            (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
+            OR
+            (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+        )
+        AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+        AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+        AND (:priority IS NULL OR t.taskPriority = :priority)
+    """
+    )
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") String dayOfWeek,
-            @Param("goalCategoryId") Long goalCategoryId,       // 추가
-            @Param("generalCategoryId") Long generalCategoryId, // 추가
-            @Param("priority") TaskPriority priority,           // 추가
+            @Param("goalCategoryId") Long goalCategoryId,
+            @Param("generalCategoryId") Long generalCategoryId,
+            @Param("priority") TaskPriority priority,
             Pageable pageable
     );
 

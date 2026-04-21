@@ -57,8 +57,9 @@ public class TaskService {
         GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
 
-        List<WeekDay> dayOfWeeks = weekDayRepository.findByDayOfWeekIdIn(request.dayOfWeekIds());
-        if (dayOfWeeks.size() != request.dayOfWeekIds().size()) {
+        List<Long> dayOfWeekIdList = request.dayOfWeekIds() != null ? request.dayOfWeekIds() : List.of();
+        List<WeekDay> dayOfWeeks = weekDayRepository.findByDayOfWeekIdIn(dayOfWeekIdList);
+        if (dayOfWeeks.size() != dayOfWeekIdList.size()) {
             throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
@@ -244,8 +245,9 @@ public class TaskService {
         GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
 
-        List<WeekDay> weekDays = weekDayRepository.findByDayOfWeekIdIn(request.dayOfWeekIds());
-        if (weekDays.size() != request.dayOfWeekIds().size()) {
+        List<Long> dayOfWeekIdList = request.dayOfWeekIds() != null ? request.dayOfWeekIds() : List.of();
+        List<WeekDay> weekDays = weekDayRepository.findByDayOfWeekIdIn(dayOfWeekIdList);
+        if (weekDays.size() != dayOfWeekIdList.size()) {
             throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
