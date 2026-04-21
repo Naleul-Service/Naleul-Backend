@@ -1,6 +1,7 @@
 package com.naleul.naleul.domain.task.repository;
 
 import com.naleul.naleul.domain.task.entity.Task;
+import com.naleul.naleul.domain.task.enums.TaskPriority;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,20 +42,26 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // 날짜 + 요일 필터 (동적 조건 - 둘 다 nullable)
     @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND (:date IS NULL OR CAST(t.plannedStartAt AS date) = :date)
-        AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
-        ORDER BY t.plannedStartAt ASC
-    """)
+    SELECT DISTINCT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    JOIN FETCH t.taskDayOfWeeks tdow
+    JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND (:date IS NULL OR CAST(t.plannedStartAt AS date) = :date)
+    AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
+    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+    AND (:priority IS NULL OR t.taskPriority = :priority)
+    ORDER BY t.plannedStartAt ASC
+""")
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") String dayOfWeek,
+            @Param("goalCategoryId") Long goalCategoryId,       // 추가
+            @Param("generalCategoryId") Long generalCategoryId, // 추가
+            @Param("priority") TaskPriority priority,           // 추가
             Pageable pageable
     );
 

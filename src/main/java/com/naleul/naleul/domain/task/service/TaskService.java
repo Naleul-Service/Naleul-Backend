@@ -14,6 +14,7 @@ import com.naleul.naleul.domain.task.dto.response.TaskResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskWeeklyResponse;
 import com.naleul.naleul.domain.task.entity.Task;
 import com.naleul.naleul.domain.task.entity.TaskDayOfWeek;
+import com.naleul.naleul.domain.task.enums.TaskPriority;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
@@ -122,7 +123,7 @@ public class TaskService {
 
     public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
 
-        // dayOfWeek 값 검증 (MON~SUN 외 값 들어오면 에러)
+        // dayOfWeek 값 검증
         if (request.dayOfWeek() != null) {
             List<String> valid = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
             if (!valid.contains(request.dayOfWeek().toUpperCase())) {
@@ -130,10 +131,23 @@ public class TaskService {
             }
         }
 
+        // priority String → enum 변환 (잘못된 값이면 에러)
+        TaskPriority priority = null;
+        if (request.priority() != null) {
+            try {
+                priority = TaskPriority.valueOf(request.priority().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CustomException(ErrorCode.INVALID_ENUM_VALUE);
+            }
+        }
+
         Page<Task> taskPage = taskRepository.findDailyTasks(
                 userId,
                 request.date(),
                 request.dayOfWeek() != null ? request.dayOfWeek().toUpperCase() : null,
+                request.goalCategoryId(),    // 추가
+                request.generalCategoryId(), // 추가
+                priority,                    // 추가 (변환된 enum)
                 pageable
         );
 
