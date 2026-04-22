@@ -9,7 +9,5 @@ import java.util.Optional;
 
 public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
 
-    Optional<TaskActual> findByTaskTaskIdAndActualDate(Long taskId, LocalDate actualDate);
-
-    List<TaskActual> findByTaskTaskIdIn(List<Long> taskIds);
+    Optional<TaskActual> findByTaskTaskId(Long taskId);
 }

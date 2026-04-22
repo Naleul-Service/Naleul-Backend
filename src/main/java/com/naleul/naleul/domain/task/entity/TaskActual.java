@@ -16,22 +16,16 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-        name = "task_actual",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"task_id", "actual_date"}) // 날짜당 1개
-)
+@Table(name = "task_actual")  // uniqueConstraints 제거
 public class TaskActual {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long taskActualId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)  // ManyToOne → OneToOne
+    @JoinColumn(name = "task_id", nullable = false, unique = true)
     private Task task;
-
-    @Column(nullable = false)
-    private LocalDate actualDate; // 어느 날짜의 완료인지
 
     private LocalDateTime actualStartAt;
     private LocalDateTime actualEndAt;

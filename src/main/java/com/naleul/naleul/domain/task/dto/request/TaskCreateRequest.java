@@ -2,7 +2,6 @@ package com.naleul.naleul.domain.task.dto.request;
 
 import com.naleul.naleul.domain.task.enums.TaskPriority;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -24,8 +23,6 @@ public record TaskCreateRequest(
 
         LocalDateTime plannedStartAt,
         LocalDateTime plannedEndAt,
-
-        List<Long> dayOfWeekIds, // [1, 3, 5] → 월, 수, 금
 
         boolean defaultSettingStatus
 ) {}

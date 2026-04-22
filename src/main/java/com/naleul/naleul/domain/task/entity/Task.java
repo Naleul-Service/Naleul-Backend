@@ -52,13 +52,8 @@ public class Task {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean defaultSettingStatus;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<TaskActual> taskActuals = new ArrayList<>();
-
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<TaskDayOfWeek> taskDayOfWeeks = new ArrayList<>();
+    @OneToOne(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TaskActual taskActual;
 
     // ── 도메인 메서드 ──────────────────────────────────────
 

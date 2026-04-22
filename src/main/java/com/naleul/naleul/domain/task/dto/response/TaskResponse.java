@@ -4,9 +4,7 @@ import com.naleul.naleul.domain.task.entity.Task;
 import com.naleul.naleul.domain.task.entity.TaskActual;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record TaskResponse(
         Long taskId,
@@ -22,14 +20,9 @@ public record TaskResponse(
         LocalDateTime plannedEndAt,
         Long plannedDurationMinutes,
         boolean defaultSettingStatus,
-        List<String> dayNames,
-        List<TaskActualResponse> actuals
+        TaskActualResponse actual
 ) {
     public static TaskResponse from(Task task) {
-        List<String> days = task.getTaskDayOfWeeks().stream()
-                .map(tdow -> tdow.getDayOfWeek().getDayName())
-                .toList();
-
         String goalColorCode = task.getGoalCategory().getUserColor() != null
                 ? task.getGoalCategory().getUserColor().getColorCode()
                 : null;
@@ -38,9 +31,9 @@ public record TaskResponse(
                 ? task.getGeneralCategory().getColor().getColorCode()
                 : null;
 
-        List<TaskActualResponse> actuals = task.getTaskActuals().stream()
-                .map(TaskActualResponse::from)
-                .toList();
+        TaskActualResponse actual = task.getTaskActual() != null
+                ? TaskActualResponse.from(task.getTaskActual())
+                : null;
 
         return new TaskResponse(
                 task.getTaskId(),
@@ -56,14 +49,12 @@ public record TaskResponse(
                 task.getPlannedEndAt(),
                 task.getPlannedDurationMinutes(),
                 task.isDefaultSettingStatus(),
-                days,
-                actuals
+                actual
         );
     }
 
     public record TaskActualResponse(
             Long taskActualId,
-            LocalDate actualDate,
             LocalDateTime actualStartAt,
             LocalDateTime actualEndAt,
             Long actualDurationMinutes
@@ -71,49 +62,10 @@ public record TaskResponse(
         public static TaskActualResponse from(TaskActual actual) {
             return new TaskActualResponse(
                     actual.getTaskActualId(),
-                    actual.getActualDate(),
                     actual.getActualStartAt(),
                     actual.getActualEndAt(),
                     actual.getActualDurationMinutes()
             );
         }
-    }
-
-    public static TaskResponse fromWithDateFilter(Task task, LocalDate date) {
-        List<String> days = task.getTaskDayOfWeeks().stream()
-                .map(tdow -> tdow.getDayOfWeek().getDayName())
-                .toList();
-
-        String goalColorCode = task.getGoalCategory().getUserColor() != null
-                ? task.getGoalCategory().getUserColor().getColorCode()
-                : null;
-
-        String generalColorCode = task.getGeneralCategory().getColor() != null
-                ? task.getGeneralCategory().getColor().getColorCode()
-                : null;
-
-        // 해당 날짜의 actual만 필터링
-        List<TaskActualResponse> actuals = task.getTaskActuals().stream()
-                .filter(a -> date == null || a.getActualDate().equals(date))
-                .map(TaskActualResponse::from)
-                .toList();
-
-        return new TaskResponse(
-                task.getTaskId(),
-                task.getTaskName(),
-                task.getTaskPriority(),
-                task.getGoalCategory().getGoalCategoryId(),
-                task.getGoalCategory().getGoalCategoryName(),
-                goalColorCode,
-                task.getGeneralCategory().getGeneralCategoryId(),
-                task.getGeneralCategory().getGeneralCategoryName(),
-                generalColorCode,
-                task.getPlannedStartAt(),
-                task.getPlannedEndAt(),
-                task.getPlannedDurationMinutes(),
-                task.isDefaultSettingStatus(),
-                days,
-                actuals
-        );
     }
 }

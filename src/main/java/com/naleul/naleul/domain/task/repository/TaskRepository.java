@@ -19,8 +19,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     """)
     List<Task> findAllByUserIdWithDetails(@Param("userId") Long userId);
@@ -29,8 +27,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.taskId = :taskId AND t.user.userId = :userId
     """)
     Optional<Task> findByTaskIdAndUserIdWithDetails(
@@ -40,20 +36,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query(
             value = """
-    SELECT DISTINCT t FROM Task t
+    SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     AND (
-        (t.defaultSettingStatus = false AND (
-            CAST(t.plannedStartAt AS date) = :date
-            OR CAST(t.plannedStartAt AS date) = :prevDate
-            OR CAST(t.plannedEndAt AS date) = :date
-        ))
-        OR
-        (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+        CAST(t.plannedStartAt AS date) = :date
+        OR CAST(t.plannedStartAt AS date) = :prevDate
+        OR CAST(t.plannedEndAt AS date) = :date
     )
     AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
     AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
@@ -61,18 +51,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     ORDER BY t.plannedStartAt ASC
     """,
             countQuery = """
-    SELECT COUNT(DISTINCT t) FROM Task t
-    LEFT JOIN t.taskDayOfWeeks tdow
-    LEFT JOIN tdow.dayOfWeek
+    SELECT COUNT(t) FROM Task t
     WHERE t.user.userId = :userId
     AND (
-        (t.defaultSettingStatus = false AND (
-            CAST(t.plannedStartAt AS date) = :date
-            OR CAST(t.plannedStartAt AS date) = :prevDate
-            OR CAST(t.plannedEndAt AS date) = :date
-        ))
-        OR
-        (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+        CAST(t.plannedStartAt AS date) = :date
+        OR CAST(t.plannedStartAt AS date) = :prevDate
+        OR CAST(t.plannedEndAt AS date) = :date
     )
     AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
     AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
@@ -83,7 +67,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("userId") Long userId,
             @Param("date") LocalDate date,
             @Param("prevDate") LocalDate prevDate,
-            @Param("dayOfWeek") String dayOfWeek,
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId,
             @Param("priority") TaskPriority priority,
@@ -91,18 +74,15 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     );
 
     @Query("""
-    SELECT DISTINCT t FROM Task t
+    SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
     AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
     AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
     AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
     AND (:priority IS NULL OR t.taskPriority = :priority)
-    AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
     ORDER BY t.plannedStartAt ASC
     """)
     List<Task> findWeeklyTasksWithoutPage(
@@ -111,16 +91,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("endDate") LocalDate endDate,
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId,
-            @Param("priority") TaskPriority priority,
-            @Param("dayOfWeek") String dayOfWeek
+            @Param("priority") TaskPriority priority
     );
 
     @Query("""
-    SELECT DISTINCT t FROM Task t
+    SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     AND (
         (YEAR(t.plannedStartAt) = :year AND MONTH(t.plannedStartAt) = :month)
@@ -136,11 +113,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     );
 
     @Query("""
-    SELECT DISTINCT t FROM Task t
+    SELECT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    LEFT JOIN FETCH t.taskDayOfWeeks tdow
-    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     AND t.plannedStartAt < :endDateTime
     AND t.plannedEndAt > :startDateTime

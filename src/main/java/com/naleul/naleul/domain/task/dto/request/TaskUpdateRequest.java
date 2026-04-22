@@ -25,7 +25,5 @@ public record TaskUpdateRequest(
         LocalDateTime plannedStartAt,
         LocalDateTime plannedEndAt,
 
-        List<Long> dayOfWeekIds,
-
         boolean defaultSettingStatus
 ) {}

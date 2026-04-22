@@ -14,6 +14,5 @@ public record TaskWeeklyRequest(
 
         Long goalCategoryId,
         Long generalCategoryId,
-        String priority,
-        String dayOfWeek        // 예: MONDAY, TUESDAY ...
+        String priority
 ) {}
