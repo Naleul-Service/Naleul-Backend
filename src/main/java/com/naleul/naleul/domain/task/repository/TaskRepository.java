@@ -17,23 +17,23 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // 사용자의 전체 Task 조회 (N+1 방지용 fetch join)
     @Query("""
-        SELECT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
+    SELECT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
     """)
     List<Task> findAllByUserIdWithDetails(@Param("userId") Long userId);
 
     // 단건 조회 (본인 소유 확인 포함)
     @Query("""
-        SELECT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.taskId = :taskId AND t.user.userId = :userId
+    SELECT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
+    WHERE t.taskId = :taskId AND t.user.userId = :userId
     """)
     Optional<Task> findByTaskIdAndUserIdWithDetails(
             @Param("taskId") Long taskId,
@@ -45,8 +45,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         SELECT DISTINCT t FROM Task t
         JOIN FETCH t.goalCategory
         JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
+        LEFT JOIN FETCH t.taskDayOfWeeks tdow
+        LEFT JOIN FETCH tdow.dayOfWeek
         WHERE t.user.userId = :userId
         AND (
             (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
@@ -57,11 +57,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
         AND (:priority IS NULL OR t.taskPriority = :priority)
         ORDER BY t.plannedStartAt ASC
-    """,
+        """,
             countQuery = """
         SELECT COUNT(DISTINCT t) FROM Task t
-        JOIN t.taskDayOfWeeks tdow
-        JOIN tdow.dayOfWeek
+        LEFT JOIN t.taskDayOfWeeks tdow
+        LEFT JOIN tdow.dayOfWeek
         WHERE t.user.userId = :userId
         AND (
             (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
@@ -71,7 +71,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
         AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
         AND (:priority IS NULL OR t.taskPriority = :priority)
-    """
+        """
     )
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
@@ -141,8 +141,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     SELECT DISTINCT t FROM Task t
     JOIN FETCH t.goalCategory
     JOIN FETCH t.generalCategory
-    JOIN FETCH t.taskDayOfWeeks tdow
-    JOIN FETCH tdow.dayOfWeek
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
     AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
     AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
@@ -151,7 +151,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     AND (:priority IS NULL OR t.taskPriority = :priority)
     AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek)
     ORDER BY t.plannedStartAt ASC
-""")
+    """)
     List<Task> findWeeklyTasksWithoutPage(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate,
@@ -163,15 +163,15 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     );
 
     @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND YEAR(t.plannedStartAt) = :year
-        AND MONTH(t.plannedStartAt) = :month
-        ORDER BY t.plannedStartAt ASC
+    SELECT DISTINCT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND YEAR(t.plannedStartAt) = :year
+    AND MONTH(t.plannedStartAt) = :month
+    ORDER BY t.plannedStartAt ASC
     """)
     List<Task> findMonthlyTasksWithoutPage(
             @Param("userId") Long userId,
