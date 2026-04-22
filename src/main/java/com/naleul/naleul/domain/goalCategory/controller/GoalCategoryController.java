@@ -14,6 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 
@@ -98,5 +103,16 @@ public class GoalCategoryController {
         goalCategoryService.delete(goalCategoryId);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.GOAL_DELETED, null));
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<ApiResponse<Page<CompletedGoalCategoryResponse>>> getCompletedGoalCategories(
+            @AuthenticationPrincipal Long userId,
+            @PageableDefault(size = 10, sort = "goalCategoryEndDate", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Page<CompletedGoalCategoryResponse> response =
+                goalCategoryService.getCompletedGoalCategories(userId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.GOAL_FOUND, response));
     }
 }

@@ -6,6 +6,7 @@ import com.naleul.naleul.domain.goalCategory.dto.request.GeneralCategoryAssignRe
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCompleteRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCreateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryUpdateRequest;
+import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.dto.response.GoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
@@ -19,7 +20,8 @@ import com.naleul.naleul.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -179,5 +181,16 @@ public class GoalCategoryService {
         }
 
         goalCategory.delete();
+    }
+
+    public Page<CompletedGoalCategoryResponse> getCompletedGoalCategories(
+            Long userId,
+            Pageable pageable
+    ) {
+        return goalCategoryRepository.findCompletedByUserId(
+                userId,
+                GoalCategoryStatus.COMPLETED,
+                pageable
+        );
     }
 }
