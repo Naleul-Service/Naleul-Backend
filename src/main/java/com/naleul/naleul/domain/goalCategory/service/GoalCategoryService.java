@@ -103,24 +103,23 @@ public class GoalCategoryService {
     // 목표 완료 처리
     @Transactional
     public GoalCategoryResponse complete(Long goalCategoryId, GoalCategoryCompleteRequest request) {
-        GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
+        GoalCategory goalCategory = goalCategoryRepository.findActiveById(goalCategoryId)  // 변경
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
-
 
         if (goalCategory.isDefault()) {
             throw new CustomException(ErrorCode.GOAL_CATEGORY_DEFAULT_CANNOT_MODIFY);
         }
 
         goalCategory.complete(request.getGoalCategoryEndDate(), request.getAchievement());
-
         return GoalCategoryResponse.from(goalCategory);
     }
+
 
     // 일반 카테고리와 연결
     @Transactional
     public GoalCategoryResponse assignGeneralCategories(Long goalCategoryId,
                                                         GeneralCategoryAssignRequest request) {
-        GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
+        GoalCategory goalCategory = goalCategoryRepository.findActiveById(goalCategoryId)  // 변경
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         List<GeneralCategory> generalCategories = generalCategoryRepository
@@ -137,31 +136,27 @@ public class GoalCategoryService {
     // 목표 카테고리 수정
     @Transactional
     public GoalCategoryResponse update(Long goalCategoryId, GoalCategoryUpdateRequest request) {
-        GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
+        GoalCategory goalCategory = goalCategoryRepository.findActiveById(goalCategoryId)  // 변경
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         if (goalCategory.isDefault()) {
             throw new CustomException(ErrorCode.GOAL_CATEGORY_DEFAULT_CANNOT_MODIFY);
         }
 
-        // Color 변경이 있을 때만 조회
         if (request.getColorId() != null) {
             UserColor color = userColorRepository.findById(request.getColorId())
                     .orElseThrow(() -> new CustomException(ErrorCode.COLOR_NOT_FOUND));
             goalCategory.updateColor(color);
         }
 
-        // goalCategoryName을 보낸 경우에만 중복 검증
         if (request.getGoalCategoryName() != null) {
             boolean isDuplicated = goalCategoryRepository
                     .existsByUser_UserIdAndGoalCategoryNameAndGoalCategoryIdNot(
                             goalCategory.getUser().getUserId(),
                             request.getGoalCategoryName(),
-                            goalCategoryId  // 자기 자신은 제외
+                            goalCategoryId
                     );
-            if (isDuplicated) {
-                throw new CustomException(ErrorCode.GOAL_CATEGORY_NAME_DUPLICATED);
-            }
+            if (isDuplicated) throw new CustomException(ErrorCode.GOAL_CATEGORY_NAME_DUPLICATED);
         }
 
         goalCategory.update(
@@ -176,7 +171,7 @@ public class GoalCategoryService {
     // 목표 카테고리 소프트 삭제
     @Transactional
     public void delete(Long goalCategoryId) {
-        GoalCategory goalCategory = goalCategoryRepository.findById(goalCategoryId)
+        GoalCategory goalCategory = goalCategoryRepository.findActiveById(goalCategoryId)  // 변경
                 .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
         if (goalCategory.isDefault()) {

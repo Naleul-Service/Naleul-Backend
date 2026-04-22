@@ -10,22 +10,23 @@ import java.util.Optional;
 
 public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long> {
     @Query("""
-        SELECT goalCategory FROM GoalCategory goalCategory
-        LEFT JOIN FETCH goalCategory.userColor
-        LEFT JOIN FETCH goalCategory.generalCategories generalCategory
-        LEFT JOIN FETCH generalCategory.color
-        WHERE goalCategory.goalCategoryId = :goalCategoryId
-    """)
+    SELECT goalCategory FROM GoalCategory goalCategory
+    LEFT JOIN FETCH goalCategory.userColor
+    LEFT JOIN FETCH goalCategory.generalCategories generalCategory
+    LEFT JOIN FETCH generalCategory.color
+    WHERE goalCategory.goalCategoryId = :goalCategoryId
+    AND goalCategory.goalCategoryStatus != 'DELETED'
+""")
     Optional<GoalCategory> findByIdWithAll(@Param("goalCategoryId") Long goalCategoryId);
 
-    // ✅ 유저별 전체 조회 (fetch join)
     @Query("""
-        SELECT goalCategory FROM GoalCategory goalCategory
-        LEFT JOIN FETCH goalCategory.userColor
-        LEFT JOIN FETCH goalCategory.generalCategories generalCategory
-        LEFT JOIN FETCH generalCategory.color
-        WHERE goalCategory.user.userId = :userId
-    """)
+    SELECT goalCategory FROM GoalCategory goalCategory
+    LEFT JOIN FETCH goalCategory.userColor
+    LEFT JOIN FETCH goalCategory.generalCategories generalCategory
+    LEFT JOIN FETCH generalCategory.color
+    WHERE goalCategory.user.userId = :userId
+    AND goalCategory.goalCategoryStatus != 'DELETED'
+""")
     List<GoalCategory> findAllByUserIdWithAll(@Param("userId") Long userId);
 
     // 2번: 동일 유저의 동일 카테고리명 중복 체크
@@ -37,4 +38,11 @@ public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long
             String goalCategoryName,
             Long goalCategoryId
     );
+
+    @Query("""
+    SELECT g FROM GoalCategory g
+    WHERE g.goalCategoryId = :goalCategoryId
+    AND g.goalCategoryStatus != 'DELETED'
+""")
+    Optional<GoalCategory> findActiveById(@Param("goalCategoryId") Long goalCategoryId);
 }
