@@ -36,37 +36,31 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query(
             value = """
-    SELECT t FROM Task t
-    JOIN FETCH t.goalCategory
-    JOIN FETCH t.generalCategory
-    WHERE t.user.userId = :userId
-    AND (
-        CAST(t.plannedStartAt AS date) = :date
-        OR CAST(t.plannedStartAt AS date) = :prevDate
-        OR CAST(t.plannedEndAt AS date) = :date
-    )
-    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-    AND (:priority IS NULL OR t.taskPriority = :priority)
-    ORDER BY t.plannedStartAt ASC
-    """,
+SELECT t FROM Task t
+JOIN FETCH t.goalCategory
+JOIN FETCH t.generalCategory
+WHERE t.user.userId = :userId
+AND t.plannedStartAt < :kstDayEnd
+AND t.plannedEndAt > :kstDayStart
+AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+AND (:priority IS NULL OR t.taskPriority = :priority)
+ORDER BY t.plannedStartAt ASC
+""",
             countQuery = """
-    SELECT COUNT(t) FROM Task t
-    WHERE t.user.userId = :userId
-    AND (
-        CAST(t.plannedStartAt AS date) = :date
-        OR CAST(t.plannedStartAt AS date) = :prevDate
-        OR CAST(t.plannedEndAt AS date) = :date
-    )
-    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-    AND (:priority IS NULL OR t.taskPriority = :priority)
-    """
+SELECT COUNT(t) FROM Task t
+WHERE t.user.userId = :userId
+AND t.plannedStartAt < :kstDayEnd
+AND t.plannedEndAt > :kstDayStart
+AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+AND (:priority IS NULL OR t.taskPriority = :priority)
+"""
     )
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
-            @Param("date") LocalDate date,
-            @Param("prevDate") LocalDate prevDate,
+            @Param("kstDayStart") LocalDateTime kstDayStart,
+            @Param("kstDayEnd") LocalDateTime kstDayEnd,
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId,
             @Param("priority") TaskPriority priority,

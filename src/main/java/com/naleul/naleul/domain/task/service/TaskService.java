@@ -107,11 +107,13 @@ public class TaskService {
     public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
         TaskPriority priority = parsePriority(request.priority());
 
-        // KST 자정 넘어가는 일정 커버 — 전날(UTC 기준)도 함께 조회
+        LocalDateTime kstDayStart = request.date().atStartOfDay().minusHours(9);
+        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay().minusHours(9);
+
         Page<Task> taskPage = taskRepository.findDailyTasks(
                 userId,
-                request.date(),
-                request.date().minusDays(1),
+                kstDayStart,
+                kstDayEnd,
                 request.goalCategoryId(),
                 request.generalCategoryId(),
                 priority,
