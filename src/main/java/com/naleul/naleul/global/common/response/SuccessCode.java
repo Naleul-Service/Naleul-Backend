@@ -17,6 +17,9 @@ public enum SuccessCode {
     USER_CREATED(HttpStatus.CREATED, "회원가입 성공"),
     LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
 
+    //차트
+    CHART_FOUND(HttpStatus.OK, "차트 조회 성공"),
+
     // 컬러
     COLOR_CREATED(HttpStatus.CREATED, "색상 저장 성공"),
     COLOR_FOUND(HttpStatus.FOUND, "색상 조회 성공"),
