@@ -15,7 +15,6 @@ import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    // 사용자의 전체 Task 조회 (N+1 방지용 fetch join)
     @Query("""
     SELECT t FROM Task t
     JOIN FETCH t.goalCategory
@@ -26,7 +25,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     """)
     List<Task> findAllByUserIdWithDetails(@Param("userId") Long userId);
 
-    // 단건 조회 (본인 소유 확인 포함)
     @Query("""
     SELECT t FROM Task t
     JOIN FETCH t.goalCategory
@@ -51,6 +49,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     AND (
         (t.defaultSettingStatus = false AND (
             CAST(t.plannedStartAt AS date) = :date
+            OR CAST(t.plannedStartAt AS date) = :prevDate
             OR CAST(t.plannedEndAt AS date) = :date
         ))
         OR
@@ -69,6 +68,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     AND (
         (t.defaultSettingStatus = false AND (
             CAST(t.plannedStartAt AS date) = :date
+            OR CAST(t.plannedStartAt AS date) = :prevDate
             OR CAST(t.plannedEndAt AS date) = :date
         ))
         OR
@@ -82,64 +82,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
             @Param("date") LocalDate date,
+            @Param("prevDate") LocalDate prevDate,
             @Param("dayOfWeek") String dayOfWeek,
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId,
             @Param("priority") TaskPriority priority,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
-        AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
-        ORDER BY t.plannedStartAt ASC
-    """)
-    Page<Task> findWeeklyTasks(
-            @Param("userId") Long userId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND YEAR(t.plannedStartAt) = :year
-        AND MONTH(t.plannedStartAt) = :month
-        ORDER BY t.plannedStartAt ASC
-    """)
-    Page<Task> findMonthlyTasks(
-            @Param("userId") Long userId,
-            @Param("year") Integer year,
-            @Param("month") Integer month,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        JOIN FETCH t.taskDayOfWeeks tdow
-        JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND t.plannedStartAt < :endDateTime
-        AND t.plannedEndAt > :startDateTime
-        ORDER BY t.plannedStartAt ASC
-    """)
-    Page<Task> findByTimeRange(
-            @Param("userId") Long userId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime,
             Pageable pageable
     );
 
@@ -150,10 +97,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     LEFT JOIN FETCH t.taskDayOfWeeks tdow
     LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
-    AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate
-         OR CAST(t.plannedEndAt AS date) >= :startDate)
-    AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate
-         OR CAST(t.plannedEndAt AS date) <= :endDate)
+    AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
+    AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
     AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
     AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
     AND (:priority IS NULL OR t.taskPriority = :priority)
@@ -180,7 +125,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     AND (
         (YEAR(t.plannedStartAt) = :year AND MONTH(t.plannedStartAt) = :month)
         OR
-        (YEAR(t.plannedEndAt) = :year AND MONTH(t.plannedEndAt) = :month)
+        (t.plannedEndAt IS NOT NULL AND YEAR(t.plannedEndAt) = :year AND MONTH(t.plannedEndAt) = :month)
     )
     ORDER BY t.plannedStartAt ASC
     """)
@@ -188,5 +133,23 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("userId") Long userId,
             @Param("year") Integer year,
             @Param("month") Integer month
+    );
+
+    @Query("""
+    SELECT DISTINCT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND t.plannedStartAt < :endDateTime
+    AND t.plannedEndAt > :startDateTime
+    ORDER BY t.plannedStartAt ASC
+    """)
+    Page<Task> findByTimeRange(
+            @Param("userId") Long userId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime,
+            Pageable pageable
     );
 }

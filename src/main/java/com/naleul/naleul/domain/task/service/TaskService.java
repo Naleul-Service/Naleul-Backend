@@ -51,6 +51,9 @@ public class TaskService {
     );
     private static final List<String> VALID_DAYS = DAY_ORDER;
 
+    // KST = UTC+9
+    private static final int KST_OFFSET_HOURS = 9;
+
     // ── 생성 ──────────────────────────────────────────────
     @Transactional
     public TaskResponse createTask(Long userId, TaskCreateRequest request) {
@@ -125,9 +128,11 @@ public class TaskService {
 
         TaskPriority priority = parsePriority(request.priority());
 
+        // KST 자정 넘어가는 일정 커버 — 전날(UTC 기준)도 함께 조회
         Page<Task> taskPage = taskRepository.findDailyTasks(
                 userId,
                 request.date(),
+                request.date().minusDays(1),
                 request.dayOfWeek() != null ? request.dayOfWeek().toUpperCase() : null,
                 request.goalCategoryId(),
                 request.generalCategoryId(),
@@ -151,17 +156,17 @@ public class TaskService {
         TaskPriority priority = parsePriority(request.priority());
         String dayOfWeek = parseAndValidateDayOfWeek(request.dayOfWeek());
 
+        // KST 자정 넘어가는 일정 커버 — 전날/다음날(UTC 기준)도 함께 조회
         List<Task> tasks = taskRepository.findWeeklyTasksWithoutPage(
                 userId,
-                request.startDate(),
-                request.endDate(),
+                request.startDate() != null ? request.startDate().minusDays(1) : null,
+                request.endDate() != null ? request.endDate().plusDays(1) : null,
                 request.goalCategoryId(),
                 request.generalCategoryId(),
                 priority,
                 dayOfWeek
         );
 
-        // startDate 기준으로 각 요일의 실제 날짜 계산
         Map<String, LocalDate> dayToDate = new LinkedHashMap<>();
         if (request.startDate() != null) {
             for (int i = 0; i < DAY_ORDER.size(); i++) {
@@ -198,18 +203,16 @@ public class TaskService {
 
         tasks.forEach(task -> {
             if (task.getPlannedStartAt() != null) {
-                LocalDate startDate = task.getPlannedStartAt().toLocalDate();
+                LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
                 LocalDate endDate = task.getPlannedEndAt() != null
-                        ? task.getPlannedEndAt().toLocalDate()
+                        ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
                         : startDate;
 
-                // plannedStartAt 날짜로 그룹핑
                 String startKey = startDate.toString();
                 if (tasksByDate.containsKey(startKey)) {
                     tasksByDate.get(startKey).add(TaskResponse.from(task));
                 }
 
-                // 자정 넘어가는 경우 plannedEndAt 날짜에도 추가 (중복 방지)
                 if (!endDate.equals(startDate)) {
                     String endKey = endDate.toString();
                     if (tasksByDate.containsKey(endKey)) {
@@ -294,18 +297,17 @@ public class TaskService {
     // ── 내부 유틸 ──────────────────────────────────────────
 
     /**
-     * 태스크가 특정 요일/날짜에 해당하는지 판단
-     * - 반복 태스크(defaultSettingStatus=true): 요일 일치 여부
-     * - 단일 태스크(defaultSettingStatus=false): plannedStartAt 날짜 일치 여부
+     * UTC로 저장된 시간을 KST(+9)로 변환해서 날짜 계산
+     * - 반복 태스크: 요일 일치 여부
+     * - 단일 태스크: KST 기준 날짜 일치 여부 (start 또는 end)
      */
     private boolean matchesDay(Task task, String day, LocalDate dayDate) {
         if (!task.isDefaultSettingStatus()) {
             if (dayDate == null || task.getPlannedStartAt() == null) return false;
-            LocalDate startDate = task.getPlannedStartAt().toLocalDate();
+            LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
             LocalDate endDate = task.getPlannedEndAt() != null
-                    ? task.getPlannedEndAt().toLocalDate()
+                    ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
                     : startDate;
-            // plannedStartAt 날짜 또는 plannedEndAt 날짜가 해당 요일 날짜와 일치하면 포함
             return startDate.equals(dayDate) || endDate.equals(dayDate);
         }
         return task.getTaskDayOfWeeks().stream()
