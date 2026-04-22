@@ -42,36 +42,42 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query(
             value = """
-        SELECT DISTINCT t FROM Task t
-        JOIN FETCH t.goalCategory
-        JOIN FETCH t.generalCategory
-        LEFT JOIN FETCH t.taskDayOfWeeks tdow
-        LEFT JOIN FETCH tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND (
-            (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
-            OR
-            (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
-        )
-        AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-        AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-        AND (:priority IS NULL OR t.taskPriority = :priority)
-        ORDER BY t.plannedStartAt ASC
-        """,
+    SELECT DISTINCT t FROM Task t
+    JOIN FETCH t.goalCategory
+    JOIN FETCH t.generalCategory
+    LEFT JOIN FETCH t.taskDayOfWeeks tdow
+    LEFT JOIN FETCH tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND (
+        (t.defaultSettingStatus = false AND (
+            CAST(t.plannedStartAt AS date) = :date
+            OR CAST(t.plannedEndAt AS date) = :date
+        ))
+        OR
+        (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+    )
+    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+    AND (:priority IS NULL OR t.taskPriority = :priority)
+    ORDER BY t.plannedStartAt ASC
+    """,
             countQuery = """
-        SELECT COUNT(DISTINCT t) FROM Task t
-        LEFT JOIN t.taskDayOfWeeks tdow
-        LEFT JOIN tdow.dayOfWeek
-        WHERE t.user.userId = :userId
-        AND (
-            (t.defaultSettingStatus = false AND CAST(t.plannedStartAt AS date) = :date)
-            OR
-            (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
-        )
-        AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-        AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-        AND (:priority IS NULL OR t.taskPriority = :priority)
-        """
+    SELECT COUNT(DISTINCT t) FROM Task t
+    LEFT JOIN t.taskDayOfWeeks tdow
+    LEFT JOIN tdow.dayOfWeek
+    WHERE t.user.userId = :userId
+    AND (
+        (t.defaultSettingStatus = false AND (
+            CAST(t.plannedStartAt AS date) = :date
+            OR CAST(t.plannedEndAt AS date) = :date
+        ))
+        OR
+        (t.defaultSettingStatus = true AND (:dayOfWeek IS NULL OR tdow.dayOfWeek.dayName = :dayOfWeek))
+    )
+    AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
+    AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
+    AND (:priority IS NULL OR t.taskPriority = :priority)
+    """
     )
     Page<Task> findDailyTasks(
             @Param("userId") Long userId,
