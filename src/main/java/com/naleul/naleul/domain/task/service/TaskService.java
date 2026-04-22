@@ -1,6 +1,5 @@
 package com.naleul.naleul.domain.task.service;
 
-
 import com.naleul.naleul.domain.dayOfTheWeek.entity.WeekDay;
 import com.naleul.naleul.domain.dayOfTheWeek.repository.WeekDayRepository;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
@@ -37,7 +36,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true) // 기본은 읽기 전용 → 성능 최적화
+@Transactional(readOnly = true)
 public class TaskService {
 
     private final TaskRepository taskRepository;
@@ -47,10 +46,14 @@ public class TaskService {
     private final WeekDayRepository weekDayRepository;
     private final TaskActualRepository taskActualRepository;
 
+    private static final List<String> DAY_ORDER = List.of(
+            "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"
+    );
+    private static final List<String> VALID_DAYS = DAY_ORDER;
+
     // ── 생성 ──────────────────────────────────────────────
     @Transactional
     public TaskResponse createTask(Long userId, TaskCreateRequest request) {
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -66,7 +69,6 @@ public class TaskService {
             throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
-        // Task 생성 (실제 시간은 null)
         Task task = Task.builder()
                 .taskName(request.taskName())
                 .taskPriority(request.taskPriority())
@@ -79,14 +81,13 @@ public class TaskService {
                 .defaultSettingStatus(request.defaultSettingStatus())
                 .build();
 
-        // 중간 테이블 엔티티 생성 및 연결
         dayOfWeeks.forEach(day ->
                 task.getTaskDayOfWeeks().add(
                         TaskDayOfWeek.builder().task(task).dayOfWeek(day).build()
                 )
         );
 
-        taskRepository.save(task); // cascade로 TaskDayOfWeek도 함께 저장됨
+        taskRepository.save(task);
         return TaskResponse.from(task);
     }
 
@@ -106,61 +107,38 @@ public class TaskService {
     }
 
     public TaskPageResponse getTasksByTimeRange(Long userId, TaskTimeRangeRequest request, Pageable pageable) {
-
         if (request.startTime().isAfter(request.endTime())) {
             throw new CustomException(ErrorCode.TASK_INVALID_TIME_RANGE);
         }
 
-        // LocalDate + LocalTime → LocalDateTime 으로 합치기
         LocalDateTime startDateTime = LocalDateTime.of(request.date(), request.startTime());
         LocalDateTime endDateTime = LocalDateTime.of(request.date(), request.endTime());
 
-        Page<Task> taskPage = taskRepository.findByTimeRange(
+        Page<Task> taskPage = taskRepository.findByTimeRange(userId, startDateTime, endDateTime, pageable);
+        return TaskPageResponse.from(taskPage.map(TaskResponse::from));
+    }
+
+    public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
+        if (request.dayOfWeek() != null && !VALID_DAYS.contains(request.dayOfWeek().toUpperCase())) {
+            throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
+        }
+
+        TaskPriority priority = parsePriority(request.priority());
+
+        Page<Task> taskPage = taskRepository.findDailyTasks(
                 userId,
-                startDateTime,
-                endDateTime,
+                request.date(),
+                request.dayOfWeek() != null ? request.dayOfWeek().toUpperCase() : null,
+                request.goalCategoryId(),
+                request.generalCategoryId(),
+                priority,
                 pageable
         );
 
         return TaskPageResponse.from(taskPage.map(TaskResponse::from));
     }
 
-    public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
-
-        // dayOfWeek 값 검증
-        if (request.dayOfWeek() != null) {
-            List<String> valid = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
-            if (!valid.contains(request.dayOfWeek().toUpperCase())) {
-                throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
-            }
-        }
-
-        // priority String → enum 변환 (잘못된 값이면 에러)
-        TaskPriority priority = null;
-        if (request.priority() != null) {
-            try {
-                priority = TaskPriority.valueOf(request.priority().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_ENUM_VALUE);
-            }
-        }
-
-        Page<Task> taskPage = taskRepository.findDailyTasks(
-                userId,
-                request.date(),
-                request.dayOfWeek() != null ? request.dayOfWeek().toUpperCase() : null,
-                request.goalCategoryId(),    // 추가
-                request.generalCategoryId(), // 추가
-                priority,                    // 추가 (변환된 enum)
-                pageable
-        );
-
-        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::from);
-        return TaskPageResponse.from(responsePage);
-    }
-
     public TaskWeeklyResponse getWeeklyTasks(Long userId, TaskWeeklyRequest request) {
-
         if (request.startDate() != null && request.endDate() != null) {
             if (request.startDate().isAfter(request.endDate())) {
                 throw new CustomException(ErrorCode.TASK_INVALID_DATE_RANGE);
@@ -170,26 +148,8 @@ public class TaskService {
             }
         }
 
-        // priority String → enum 변환
-        TaskPriority priority = null;
-        if (request.priority() != null) {
-            try {
-                priority = TaskPriority.valueOf(request.priority().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_ENUM_VALUE);
-            }
-        }
-
-        // dayOfWeek 값 검증
-        String dayOfWeek = null;
-        if (request.dayOfWeek() != null) {
-            List<String> valid = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
-            String upper = request.dayOfWeek().toUpperCase();
-            if (!valid.contains(upper)) {
-                throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
-            }
-            dayOfWeek = upper;
-        }
+        TaskPriority priority = parsePriority(request.priority());
+        String dayOfWeek = parseAndValidateDayOfWeek(request.dayOfWeek());
 
         List<Task> tasks = taskRepository.findWeeklyTasksWithoutPage(
                 userId,
@@ -201,24 +161,20 @@ public class TaskService {
                 dayOfWeek
         );
 
-        List<String> dayOrder = List.of("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
-
         // startDate 기준으로 각 요일의 실제 날짜 계산
         Map<String, LocalDate> dayToDate = new LinkedHashMap<>();
         if (request.startDate() != null) {
-            for (int i = 0; i < dayOrder.size(); i++) {
-                dayToDate.put(dayOrder.get(i), request.startDate().plusDays(i));
+            for (int i = 0; i < DAY_ORDER.size(); i++) {
+                dayToDate.put(DAY_ORDER.get(i), request.startDate().plusDays(i));
             }
         }
 
         Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>();
-        dayOrder.forEach(day -> {
+        DAY_ORDER.forEach(day -> {
             LocalDate dayDate = dayToDate.get(day);
-
             List<TaskResponse> dayTasks = tasks.stream()
-                    .filter(task -> task.getTaskDayOfWeeks().stream()
-                            .anyMatch(tdow -> tdow.getDayOfWeek().getDayName().equals(day)))
-                    .map(task -> TaskResponse.fromWithDateFilter(task, dayDate)) // 날짜 필터 추가
+                    .filter(task -> matchesDay(task, day, dayDate))
+                    .map(task -> TaskResponse.fromWithDateFilter(task, dayDate))
                     .toList();
             tasksByDay.put(day, dayTasks);
         });
@@ -227,28 +183,22 @@ public class TaskService {
     }
 
     public TaskMonthlyResponse getMonthlyTasks(Long userId, TaskMonthlyRequest request) {
-
         List<Task> tasks = taskRepository.findMonthlyTasksWithoutPage(
                 userId,
                 request.year(),
                 request.month()
         );
 
-        // 해당 월의 첫날 ~ 마지막날 구하기
         LocalDate firstDay = LocalDate.of(request.year(), request.month(), 1);
-        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth()); // 28, 29, 30, 31 자동 계산
+        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
 
-        // 날짜별로 그룹핑 (순서 유지)
         Map<String, List<TaskResponse>> tasksByDate = new LinkedHashMap<>();
-
-        // 해당 월의 모든 날짜를 키로 먼저 세팅 (task 없는 날도 빈 배열로)
-        firstDay.datesUntil(lastDay.plusDays(1))  // 첫날부터 마지막날까지 순회
+        firstDay.datesUntil(lastDay.plusDays(1))
                 .forEach(date -> tasksByDate.put(date.toString(), new ArrayList<>()));
 
-        // task를 날짜별로 분류
         tasks.forEach(task -> {
             if (task.getPlannedStartAt() != null) {
-                String dateKey = task.getPlannedStartAt().toLocalDate().toString(); // "2024-01-15"
+                String dateKey = task.getPlannedStartAt().toLocalDate().toString();
                 if (tasksByDate.containsKey(dateKey)) {
                     tasksByDate.get(dateKey).add(TaskResponse.from(task));
                 }
@@ -274,7 +224,6 @@ public class TaskService {
         actual.update(request.actualStartAt(), request.actualEndAt());
         taskActualRepository.save(actual);
 
-        // save 후 task 다시 조회 (taskActuals 최신 상태 반영)
         Task updatedTask = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
 
@@ -283,7 +232,6 @@ public class TaskService {
 
     @Transactional
     public TaskResponse updateTask(Long userId, Long taskId, TaskUpdateRequest request) {
-
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
 
@@ -299,7 +247,6 @@ public class TaskService {
             throw new CustomException(ErrorCode.TASK_INVALID_WEEK_DAY_ID);
         }
 
-        // 기본 정보 수정
         task.update(
                 request.taskName(),
                 request.taskPriority(),
@@ -310,8 +257,6 @@ public class TaskService {
                 request.defaultSettingStatus()
         );
 
-        // 요일 교체 (기존 전부 삭제 후 새로 추가)
-        // orphanRemoval = true 이기 때문에 clear()하면 DB에서도 삭제됨
         task.getTaskDayOfWeeks().clear();
         taskRepository.flush();
 
@@ -330,11 +275,44 @@ public class TaskService {
         Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
         taskRepository.delete(task);
-        // cascade + orphanRemoval로 TaskDayOfWeek도 자동 삭제
     }
 
     // ── 내부 유틸 ──────────────────────────────────────────
-    private Long calculateMinutes(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+
+    /**
+     * 태스크가 특정 요일/날짜에 해당하는지 판단
+     * - 반복 태스크(defaultSettingStatus=true): 요일 일치 여부
+     * - 단일 태스크(defaultSettingStatus=false): plannedStartAt 날짜 일치 여부
+     */
+    private boolean matchesDay(Task task, String day, LocalDate dayDate) {
+        if (!task.isDefaultSettingStatus()) {
+            return dayDate != null
+                    && task.getPlannedStartAt() != null
+                    && task.getPlannedStartAt().toLocalDate().equals(dayDate);
+        }
+        return task.getTaskDayOfWeeks().stream()
+                .anyMatch(tdow -> tdow.getDayOfWeek().getDayName().equals(day));
+    }
+
+    private TaskPriority parsePriority(String priority) {
+        if (priority == null) return null;
+        try {
+            return TaskPriority.valueOf(priority.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_ENUM_VALUE);
+        }
+    }
+
+    private String parseAndValidateDayOfWeek(String dayOfWeek) {
+        if (dayOfWeek == null) return null;
+        String upper = dayOfWeek.toUpperCase();
+        if (!VALID_DAYS.contains(upper)) {
+            throw new CustomException(ErrorCode.TASK_INVALID_DAY_OF_WEEK);
+        }
+        return upper;
+    }
+
+    private Long calculateMinutes(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) return null;
         return java.time.Duration.between(start, end).toMinutes();
     }
