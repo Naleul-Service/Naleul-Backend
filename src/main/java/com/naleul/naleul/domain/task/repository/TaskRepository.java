@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.task.repository;
 
+import com.naleul.naleul.domain.chart.repository.projection.AchievementStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.CategoryStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.GoalGeneralStatProjection;
 import com.naleul.naleul.domain.task.entity.Task;
@@ -181,4 +182,27 @@ AND (:priority IS NULL OR t.taskPriority = :priority)
     GROUP BY t.generalCategory.generalCategoryId, ge.generalCategoryName, gc.colorCode
 """)
     List<CategoryStatProjection> findGeneralCategoryStats(@Param("userId") Long userId);
+
+    @Query(value = """
+    SELECT
+        COUNT(t.task_id) AS totalCount,
+        SUM(CASE
+            WHEN ta.actual_start_at IS NOT NULL
+             AND ta.actual_end_at IS NOT NULL
+             AND t.planned_start_at IS NOT NULL
+             AND t.planned_end_at IS NOT NULL
+             AND (
+                 TIMESTAMPDIFF(SECOND,
+                     GREATEST(t.planned_start_at, ta.actual_start_at),
+                     LEAST(t.planned_end_at, ta.actual_end_at)
+                 ) * 1.0
+                 / NULLIF(TIMESTAMPDIFF(SECOND, t.planned_start_at, t.planned_end_at), 0)
+             ) >= 0.5
+            THEN 1 ELSE 0
+        END) AS achievedCount
+    FROM task t
+    LEFT JOIN task_actual ta ON ta.task_id = t.task_id
+    WHERE t.user_id = :userId
+""", nativeQuery = true)
+    AchievementStatProjection findAchievementStats(@Param("userId") Long userId);
 }

@@ -1,8 +1,10 @@
 package com.naleul.naleul.domain.chart.service;
 
+import com.naleul.naleul.domain.chart.dto.AchievementChartDto;
 import com.naleul.naleul.domain.chart.dto.ChartResponseDto;
 import com.naleul.naleul.domain.chart.dto.ChartSliceDto;
 import com.naleul.naleul.domain.chart.dto.GoalCategoryChartDto;
+import com.naleul.naleul.domain.chart.repository.projection.AchievementStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.CategoryStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.GoalGeneralStatProjection;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
@@ -93,5 +95,22 @@ public class ChartService {
     private double calcPercentage(long part, long total) {
         if (total == 0) return 0.0;
         return Math.round((double) part / total * 1000.0) / 10.0; // 소수점 1자리
+    }
+
+    public AchievementChartDto getAchievementChart(Long userId) {
+        AchievementStatProjection stat = taskRepository.findAchievementStats(userId);
+
+        long total    = stat.getTotalCount()    != null ? stat.getTotalCount()    : 0L;
+        long achieved = stat.getAchievedCount() != null ? stat.getAchievedCount() : 0L;
+        long unachieved = total - achieved;
+
+        double rate = total == 0 ? 0.0 : Math.round((double) achieved / total * 1000.0) / 10.0;
+
+        return AchievementChartDto.builder()
+                .totalCount(total)
+                .achievedCount(achieved)
+                .unachievedCount(unachieved)
+                .achievementRate(rate)
+                .build();
     }
 }

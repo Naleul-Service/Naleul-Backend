@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.chart.controller;
 
+import com.naleul.naleul.domain.chart.dto.AchievementChartDto;
 import com.naleul.naleul.domain.chart.dto.ChartResponseDto;
 import com.naleul.naleul.domain.chart.dto.GoalCategoryChartDto;
 import com.naleul.naleul.domain.chart.service.ChartService;
@@ -48,6 +49,16 @@ public class ChartController {
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(SuccessCode.CHART_FOUND, chartService.getGeneralCategoryChart(userId))
+        );
+    }
+
+    // 계획 달성률 차트
+    @GetMapping("/achievement")
+    public ResponseEntity<ApiResponse<AchievementChartDto>> getAchievementChart(
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success(SuccessCode.CHART_FOUND, chartService.getAchievementChart(userId))
         );
     }
 }
