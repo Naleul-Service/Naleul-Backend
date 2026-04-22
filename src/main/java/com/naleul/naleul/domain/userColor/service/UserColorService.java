@@ -50,18 +50,20 @@ public class UserColorService {
     }
 
     @Transactional
-    public void addColorToUser(Long userId, String colorCode) {
+    public UserColorResponse addColorToUser(Long userId, String colorCode) {
         if (userColorRepository.existsByUser_UserIdAndColorCode(userId, colorCode)) {
             throw new CustomException(ErrorCode.COLOR_ALREADY_EXISTS);
         }
 
         User user = getUser(userId);
 
-        userColorRepository.save(UserColor.builder()
+        UserColor saved = userColorRepository.save(UserColor.builder()
                 .user(user)
                 .colorCode(colorCode)
                 .isDefault(false)
                 .build());
+
+        return UserColorResponse.from(saved);  // 반환 추가
     }
 
     @Transactional

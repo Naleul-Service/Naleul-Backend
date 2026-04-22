@@ -29,13 +29,13 @@ public class UserColorController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> addColor(
+    public ResponseEntity<ApiResponse<UserColorResponse>> addColor(
             @AuthenticationPrincipal Long userId,
             @RequestBody UserColorAddRequest request
     ) {
-        userColorService.addColorToUser(userId, request.getColorCode());
+        UserColorResponse response = userColorService.addColorToUser(userId, request.getColorCode());
         return ResponseEntity.ok(
-                ApiResponse.success(SuccessCode.COLOR_CREATED, null)
+                ApiResponse.success(SuccessCode.COLOR_CREATED, response)
         );
     }
 
