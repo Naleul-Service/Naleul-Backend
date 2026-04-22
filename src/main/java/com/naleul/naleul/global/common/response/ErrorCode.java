@@ -27,6 +27,10 @@ public enum ErrorCode {
     TASK_INVALID_DAY_OF_WEEK(HttpStatus.BAD_REQUEST, "올바르지 않은 요일 값입니다. (MONDAY~SUNDAY)"),
     TASK_INVALID_WEEK_DAY_ID(HttpStatus.BAD_REQUEST, "존재하지 않는 요일 ID가 포함되어 있습니다."),
 
+    //회고
+    RETROSPECTIVE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회고입니다."),
+    RETROSPECTIVE_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 회고에 대한 접근 권한이 없습니다."),
+
     // Color
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 색상입니다."),
     COLOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 색상입니다."),

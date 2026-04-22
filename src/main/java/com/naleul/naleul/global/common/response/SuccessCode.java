@@ -34,6 +34,13 @@ public enum SuccessCode {
     GOAL_COMPLETED(HttpStatus.OK, "목표 카테고리 완료 처리 성공"),
     GOAL_ASSIGNED(HttpStatus.OK, "일반 카테고리 연결 성공"),
 
+    // 회고
+    RETROSPECTIVE_CREATED(HttpStatus.CREATED, "회고 생성 성공"),
+    RETROSPECTIVE_FOUND(HttpStatus.OK, "회고 조회 성공"),
+    RETROSPECTIVES_FOUND(HttpStatus.OK, "회고 전체 조회 성공"),
+    RETROSPECTIVE_UPDATED(HttpStatus.OK, "회고 수정 성공"),
+    RETROSPECTIVE_DELETED(HttpStatus.OK, "회고 삭제 성공"),
+
     // 일반 카테고리
     GENERAL_CREATED(HttpStatus.CREATED, "일반 카테고리 생성 성공"),
     GENERALS_FOUND(HttpStatus.OK, "일반 카테고리 전체 조회 성공"),
