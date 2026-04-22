@@ -198,9 +198,23 @@ public class TaskService {
 
         tasks.forEach(task -> {
             if (task.getPlannedStartAt() != null) {
-                String dateKey = task.getPlannedStartAt().toLocalDate().toString();
-                if (tasksByDate.containsKey(dateKey)) {
-                    tasksByDate.get(dateKey).add(TaskResponse.from(task));
+                LocalDate startDate = task.getPlannedStartAt().toLocalDate();
+                LocalDate endDate = task.getPlannedEndAt() != null
+                        ? task.getPlannedEndAt().toLocalDate()
+                        : startDate;
+
+                // plannedStartAt 날짜로 그룹핑
+                String startKey = startDate.toString();
+                if (tasksByDate.containsKey(startKey)) {
+                    tasksByDate.get(startKey).add(TaskResponse.from(task));
+                }
+
+                // 자정 넘어가는 경우 plannedEndAt 날짜에도 추가 (중복 방지)
+                if (!endDate.equals(startDate)) {
+                    String endKey = endDate.toString();
+                    if (tasksByDate.containsKey(endKey)) {
+                        tasksByDate.get(endKey).add(TaskResponse.from(task));
+                    }
                 }
             }
         });
@@ -286,9 +300,13 @@ public class TaskService {
      */
     private boolean matchesDay(Task task, String day, LocalDate dayDate) {
         if (!task.isDefaultSettingStatus()) {
-            return dayDate != null
-                    && task.getPlannedStartAt() != null
-                    && task.getPlannedStartAt().toLocalDate().equals(dayDate);
+            if (dayDate == null || task.getPlannedStartAt() == null) return false;
+            LocalDate startDate = task.getPlannedStartAt().toLocalDate();
+            LocalDate endDate = task.getPlannedEndAt() != null
+                    ? task.getPlannedEndAt().toLocalDate()
+                    : startDate;
+            // plannedStartAt 날짜 또는 plannedEndAt 날짜가 해당 요일 날짜와 일치하면 포함
+            return startDate.equals(dayDate) || endDate.equals(dayDate);
         }
         return task.getTaskDayOfWeeks().stream()
                 .anyMatch(tdow -> tdow.getDayOfWeek().getDayName().equals(day));

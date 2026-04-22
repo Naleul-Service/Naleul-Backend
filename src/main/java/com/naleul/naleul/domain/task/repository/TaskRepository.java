@@ -150,8 +150,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     LEFT JOIN FETCH t.taskDayOfWeeks tdow
     LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
-    AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate)
-    AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate)
+    AND (:startDate IS NULL OR CAST(t.plannedStartAt AS date) >= :startDate
+         OR CAST(t.plannedEndAt AS date) >= :startDate)
+    AND (:endDate IS NULL OR CAST(t.plannedStartAt AS date) <= :endDate
+         OR CAST(t.plannedEndAt AS date) <= :endDate)
     AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
     AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
     AND (:priority IS NULL OR t.taskPriority = :priority)
@@ -175,8 +177,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     LEFT JOIN FETCH t.taskDayOfWeeks tdow
     LEFT JOIN FETCH tdow.dayOfWeek
     WHERE t.user.userId = :userId
-    AND YEAR(t.plannedStartAt) = :year
-    AND MONTH(t.plannedStartAt) = :month
+    AND (
+        (YEAR(t.plannedStartAt) = :year AND MONTH(t.plannedStartAt) = :month)
+        OR
+        (YEAR(t.plannedEndAt) = :year AND MONTH(t.plannedEndAt) = :month)
+    )
     ORDER BY t.plannedStartAt ASC
     """)
     List<Task> findMonthlyTasksWithoutPage(
