@@ -53,6 +53,7 @@ public class Task {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean defaultSettingStatus;
 
+    @Builder.Default
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaskActual> taskActuals = new ArrayList<>();
 
