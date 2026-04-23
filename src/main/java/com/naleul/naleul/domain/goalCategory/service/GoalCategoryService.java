@@ -56,6 +56,7 @@ public class GoalCategoryService {
                 .goalCategoryName(request.getGoalCategoryName())
                 .goalCategoryStatus(request.getGoalCategoryStatus())
                 .goalCategoryStartDate(request.getGoalCategoryStartDate())
+                .isDefault(false)
                 .build();
 
         goalCategoryRepository.save(goalCategory);
