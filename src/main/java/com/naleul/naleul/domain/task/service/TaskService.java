@@ -10,9 +10,7 @@ import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskWeeklyResponse;
 import com.naleul.naleul.domain.task.entity.Task;
-import com.naleul.naleul.domain.task.entity.TaskActual;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
-import com.naleul.naleul.domain.task.repository.TaskActualRepository;
 import com.naleul.naleul.domain.task.repository.TaskRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
@@ -24,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,9 +39,7 @@ public class TaskService {
     private final UserRepository userRepository;
     private final GoalCategoryRepository goalCategoryRepository;
     private final GeneralCategoryRepository generalCategoryRepository;
-    private final TaskActualRepository taskActualRepository;
 
-    // KST = UTC+9
     private static final int KST_OFFSET_HOURS = 9;
 
     private static final List<String> DAY_ORDER = List.of(
@@ -50,16 +47,12 @@ public class TaskService {
     );
 
     // ── 생성 ──────────────────────────────────────────────
+
     @Transactional
     public TaskResponse createTask(Long userId, TaskCreateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        GoalCategory goalCategory = goalCategoryRepository.findById(request.goalCategoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
-
-        GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
+        User user = findUser(userId);
+        GoalCategory goalCategory = findGoalCategory(request.goalCategoryId());
+        GeneralCategory generalCategory = findGeneralCategory(request.generalCategoryId());
 
         Task task = Task.builder()
                 .taskName(request.taskName())
@@ -78,13 +71,13 @@ public class TaskService {
     }
 
     // ── 단건 조회 ──────────────────────────────────────────
+
     public TaskResponse getTask(Long userId, Long taskId) {
-        Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
-        return TaskResponse.from(task);
+        return TaskResponse.from(findTaskWithDetails(taskId, userId));
     }
 
     // ── 전체 조회 ──────────────────────────────────────────
+
     public List<TaskResponse> getTasksByUser(Long userId) {
         return taskRepository.findAllByUserIdWithDetails(userId)
                 .stream()
@@ -107,8 +100,8 @@ public class TaskService {
     public List<TaskResponse> getDailyTasks(Long userId, TaskDailyRequest request) {
         TaskPriority priority = parsePriority(request.priority());
 
-        LocalDateTime kstDayStart = request.date().atStartOfDay().minusHours(9);
-        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay().minusHours(9);
+        LocalDateTime kstDayStart = toKstDayStart(request.date());
+        LocalDateTime kstDayEnd = toKstDayEnd(request.date());
 
         return taskRepository.findDailyTasks(
                         userId,
@@ -124,18 +117,10 @@ public class TaskService {
     }
 
     public TaskWeeklyResponse getWeeklyTasks(Long userId, TaskWeeklyRequest request) {
-        if (request.startDate() != null && request.endDate() != null) {
-            if (request.startDate().isAfter(request.endDate())) {
-                throw new CustomException(ErrorCode.TASK_INVALID_DATE_RANGE);
-            }
-            if (request.startDate().plusDays(7).isBefore(request.endDate())) {
-                throw new CustomException(ErrorCode.TASK_INVALID_WEEK_RANGE);
-            }
-        }
+        validateWeekRange(request);
 
         TaskPriority priority = parsePriority(request.priority());
 
-        // KST 자정 넘어가는 일정 커버 — 전날/다음날(UTC 기준)도 함께 조회
         List<Task> tasks = taskRepository.findWeeklyTasksWithoutPage(
                 userId,
                 request.startDate() != null ? request.startDate().minusDays(1) : null,
@@ -145,12 +130,7 @@ public class TaskService {
                 priority
         );
 
-        Map<String, LocalDate> dayToDate = new LinkedHashMap<>();
-        if (request.startDate() != null) {
-            for (int i = 0; i < DAY_ORDER.size(); i++) {
-                dayToDate.put(DAY_ORDER.get(i), request.startDate().plusDays(i));
-            }
-        }
+        Map<String, LocalDate> dayToDate = buildDayToDateMap(request.startDate());
 
         Map<String, List<TaskResponse>> tasksByDay = new LinkedHashMap<>();
         DAY_ORDER.forEach(day -> {
@@ -181,9 +161,9 @@ public class TaskService {
 
         tasks.forEach(task -> {
             if (task.getPlannedStartAt() == null) return;
-            LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
+            LocalDate startDate = toKstDate(task.getPlannedStartAt());
             LocalDate endDate = task.getPlannedEndAt() != null
-                    ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
+                    ? toKstDate(task.getPlannedEndAt())
                     : startDate;
 
             putIfPresent(tasksByDate, startDate, TaskResponse.from(task));
@@ -195,36 +175,13 @@ public class TaskService {
         return TaskMonthlyResponse.from(tasksByDate);
     }
 
-    // ── 실제 시간 기록 ──────────────────────────────────────
-    @Transactional
-    public TaskResponse recordActual(Long userId, Long taskId, TaskUpdateActualRequest request) {
-        Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
-
-        TaskActual actual = taskActualRepository
-                .findByTaskTaskId(taskId)
-                .orElse(TaskActual.builder().task(task).build());
-
-        actual.update(request.actualStartAt(), request.actualEndAt());
-        taskActualRepository.save(actual);
-
-        return TaskResponse.from(
-                taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND))
-        );
-    }
-
     // ── 수정 ──────────────────────────────────────────────
+
     @Transactional
     public TaskResponse updateTask(Long userId, Long taskId, TaskUpdateRequest request) {
-        Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
-
-        GoalCategory goalCategory = goalCategoryRepository.findById(request.goalCategoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
-
-        GeneralCategory generalCategory = generalCategoryRepository.findById(request.generalCategoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
+        Task task = findTaskWithDetails(taskId, userId);
+        GoalCategory goalCategory = findGoalCategory(request.goalCategoryId());
+        GeneralCategory generalCategory = findGeneralCategory(request.generalCategoryId());
 
         task.update(
                 request.taskName(),
@@ -240,25 +197,81 @@ public class TaskService {
     }
 
     // ── 삭제 ──────────────────────────────────────────────
+
     @Transactional
     public void deleteTask(Long userId, Long taskId) {
-        Task task = taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
+        Task task = findTaskWithDetails(taskId, userId);
         taskRepository.delete(task);
     }
 
-    // ── 내부 유틸 ──────────────────────────────────────────
+    // ── 조회 헬퍼 ─────────────────────────────────────────
+
+    private Task findTaskWithDetails(Long taskId, Long userId) {
+        return taskRepository.findByTaskIdAndUserIdWithDetails(taskId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TASK_NOT_FOUND));
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private GoalCategory findGoalCategory(Long goalCategoryId) {
+        return goalCategoryRepository.findById(goalCategoryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
+    }
+
+    private GeneralCategory findGeneralCategory(Long generalCategoryId) {
+        return generalCategoryRepository.findById(generalCategoryId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GENERAL_CATEGORY_NOT_FOUND));
+    }
+
+    // ── 날짜/시간 유틸 ────────────────────────────────────
+
+    private LocalDateTime toKstDayStart(LocalDate date) {
+        return date.atStartOfDay().minusHours(KST_OFFSET_HOURS);
+    }
+
+    private LocalDateTime toKstDayEnd(LocalDate date) {
+        return date.plusDays(1).atStartOfDay().minusHours(KST_OFFSET_HOURS);
+    }
+
+    private LocalDate toKstDate(LocalDateTime utcDateTime) {
+        return utcDateTime.plusHours(KST_OFFSET_HOURS).toLocalDate();
+    }
 
     /**
      * UTC로 저장된 시간을 KST(+9)로 변환해서 날짜 일치 여부 확인
      */
     private boolean matchesDay(Task task, LocalDate dayDate) {
         if (dayDate == null || task.getPlannedStartAt() == null) return false;
-        LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
+        LocalDate startDate = toKstDate(task.getPlannedStartAt());
         LocalDate endDate = task.getPlannedEndAt() != null
-                ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
+                ? toKstDate(task.getPlannedEndAt())
                 : startDate;
         return startDate.equals(dayDate) || endDate.equals(dayDate);
+    }
+
+    private Map<String, LocalDate> buildDayToDateMap(LocalDate startDate) {
+        Map<String, LocalDate> dayToDate = new LinkedHashMap<>();
+        if (startDate != null) {
+            for (int i = 0; i < DAY_ORDER.size(); i++) {
+                dayToDate.put(DAY_ORDER.get(i), startDate.plusDays(i));
+            }
+        }
+        return dayToDate;
+    }
+
+    // ── 기타 유틸 ─────────────────────────────────────────
+
+    private void validateWeekRange(TaskWeeklyRequest request) {
+        if (request.startDate() == null || request.endDate() == null) return;
+        if (request.startDate().isAfter(request.endDate())) {
+            throw new CustomException(ErrorCode.TASK_INVALID_DATE_RANGE);
+        }
+        if (request.startDate().plusDays(7).isBefore(request.endDate())) {
+            throw new CustomException(ErrorCode.TASK_INVALID_WEEK_RANGE);
+        }
     }
 
     private void putIfPresent(Map<String, List<TaskResponse>> map, LocalDate date, TaskResponse response) {
@@ -279,6 +292,6 @@ public class TaskService {
 
     private Long calculateMinutes(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) return null;
-        return java.time.Duration.between(start, end).toMinutes();
+        return Duration.between(start, end).toMinutes();
     }
 }

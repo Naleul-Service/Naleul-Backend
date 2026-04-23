@@ -20,7 +20,7 @@ public interface ChartRepository extends JpaRepository<Task, Long> {
         FROM Task t
         JOIN t.goalCategory g
         LEFT JOIN g.userColor gc
-        LEFT JOIN t.taskActual ta
+        LEFT JOIN t.taskActuals ta
         WHERE t.user.userId = :userId
           AND ta.actualEndAt IS NOT NULL
         GROUP BY t.goalCategory.goalCategoryId, g.goalCategoryName, gc.colorCode
@@ -41,7 +41,7 @@ public interface ChartRepository extends JpaRepository<Task, Long> {
         LEFT JOIN g.userColor gc2
         JOIN t.generalCategory ge
         LEFT JOIN ge.color gc1
-        LEFT JOIN t.taskActual ta
+        LEFT JOIN t.taskActuals ta
         WHERE t.user.userId = :userId
           AND ta.actualEndAt IS NOT NULL
         GROUP BY t.goalCategory.goalCategoryId, g.goalCategoryName, gc2.colorCode,
@@ -58,7 +58,7 @@ public interface ChartRepository extends JpaRepository<Task, Long> {
         FROM Task t
         JOIN t.generalCategory ge
         LEFT JOIN ge.color gc
-        LEFT JOIN t.taskActual ta
+        LEFT JOIN t.taskActuals ta
         WHERE t.user.userId = :userId
           AND ta.actualEndAt IS NOT NULL
         GROUP BY t.generalCategory.generalCategoryId, ge.generalCategoryName, gc.colorCode

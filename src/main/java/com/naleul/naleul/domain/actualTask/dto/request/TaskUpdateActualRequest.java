@@ -1,4 +1,4 @@
-package com.naleul.naleul.domain.task.dto.request;
+package com.naleul.naleul.domain.actualTask.dto.request;
 
 import java.time.LocalDateTime;
 

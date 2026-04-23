@@ -1,7 +1,7 @@
 package com.naleul.naleul.domain.task.dto.response;
 
 import com.naleul.naleul.domain.task.entity.Task;
-import com.naleul.naleul.domain.task.entity.TaskActual;
+import com.naleul.naleul.domain.actualTask.entity.TaskActual;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
 
 import java.time.LocalDateTime;
@@ -31,9 +31,9 @@ public record TaskResponse(
                 ? task.getGeneralCategory().getColor().getColorCode()
                 : null;
 
-        TaskActualResponse actual = task.getTaskActual() != null
-                ? TaskActualResponse.from(task.getTaskActual())
-                : null;
+        TaskActualResponse actual = task.getTaskActuals().isEmpty()
+                ? null
+                : TaskActualResponse.from(task.getTaskActuals().get(0));
 
         return new TaskResponse(
                 task.getTaskId(),

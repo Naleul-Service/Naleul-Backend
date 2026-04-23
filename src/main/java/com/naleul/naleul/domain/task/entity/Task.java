@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.task.entity;
 
+import com.naleul.naleul.domain.actualTask.entity.TaskActual;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.task.enums.TaskPriority;
@@ -52,8 +53,8 @@ public class Task {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean defaultSettingStatus;
 
-    @OneToOne(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private TaskActual taskActual;
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskActual> taskActuals = new ArrayList<>();
 
     // ── 도메인 메서드 ──────────────────────────────────────
 

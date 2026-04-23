@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.task.controller;
 
+import com.naleul.naleul.domain.actualTask.dto.request.TaskUpdateActualRequest;
 import com.naleul.naleul.domain.task.dto.request.*;
 import com.naleul.naleul.domain.task.dto.response.TaskMonthlyResponse;
 import com.naleul.naleul.domain.task.dto.response.TaskPageResponse;
@@ -104,18 +105,6 @@ public class TaskController {
         TaskResponse response = taskService.updateTask(userId, taskId, request);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.TASK_UPDATED, response));
-    }
-
-    // 실제 시간 기록 (PATCH: 일부만 수정)
-    @PatchMapping("/{taskId}/actual")
-    public ResponseEntity<ApiResponse<TaskResponse>> recordActual(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long taskId,
-            @Valid @RequestBody TaskUpdateActualRequest request
-    ) {
-        TaskResponse response = taskService.recordActual(userId, taskId, request);
-        return ResponseEntity
-                .ok(ApiResponse.success(SuccessCode.TASK_COMPLETED, response));
     }
 
     @DeleteMapping("/{taskId}")
