@@ -107,8 +107,9 @@ public class TaskService {
     public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
         TaskPriority priority = parsePriority(request.priority());
 
-        LocalDateTime kstDayStart = request.date().atStartOfDay().minusHours(9);
-        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay().minusHours(9);
+        // DB에 KST 그대로 저장되어 있으므로 변환 없이 사용
+        LocalDateTime kstDayStart = request.date().atStartOfDay();
+        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay();
 
         Page<Task> taskPage = taskRepository.findDailyTasks(
                 userId,
@@ -181,10 +182,9 @@ public class TaskService {
 
         tasks.forEach(task -> {
             if (task.getPlannedStartAt() == null) return;
-
-            LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
+            LocalDate startDate = task.getPlannedStartAt().toLocalDate();  // plusHours 제거
             LocalDate endDate = task.getPlannedEndAt() != null
-                    ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
+                    ? task.getPlannedEndAt().toLocalDate()  // plusHours 제거
                     : startDate;
 
             putIfPresent(tasksByDate, startDate, TaskResponse.from(task));
@@ -255,9 +255,9 @@ public class TaskService {
      */
     private boolean matchesDay(Task task, LocalDate dayDate) {
         if (dayDate == null || task.getPlannedStartAt() == null) return false;
-        LocalDate startDate = task.getPlannedStartAt().plusHours(KST_OFFSET_HOURS).toLocalDate();
+        LocalDate startDate = task.getPlannedStartAt().toLocalDate();  // plusHours 제거
         LocalDate endDate = task.getPlannedEndAt() != null
-                ? task.getPlannedEndAt().plusHours(KST_OFFSET_HOURS).toLocalDate()
+                ? task.getPlannedEndAt().toLocalDate()  // plusHours 제거
                 : startDate;
         return startDate.equals(dayDate) || endDate.equals(dayDate);
     }
