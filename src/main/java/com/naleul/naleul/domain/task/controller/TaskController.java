@@ -67,14 +67,12 @@ public class TaskController {
     }
 
     @GetMapping("/daily")
-    public ResponseEntity<ApiResponse<TaskPageResponse>> getDailyTasks(
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getDailyTasks(
             @AuthenticationPrincipal Long userId,
-            @ModelAttribute TaskDailyRequest request,  // 쿼리파라미터를 객체로 바인딩
-            @PageableDefault(size = 10, sort = "plannedStartAt") Pageable pageable
+            @ModelAttribute TaskDailyRequest request
     ) {
-        TaskPageResponse response = taskService.getDailyTasks(userId, request, pageable);
-        return ResponseEntity
-                .ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
+        List<TaskResponse> response = taskService.getDailyTasks(userId, request);
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.TASKS_FOUND, response));
     }
 
     @GetMapping("/weekly")

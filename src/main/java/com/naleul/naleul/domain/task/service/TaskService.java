@@ -104,23 +104,23 @@ public class TaskService {
         return TaskPageResponse.from(taskPage.map(TaskResponse::from));
     }
 
-    public TaskPageResponse getDailyTasks(Long userId, TaskDailyRequest request, Pageable pageable) {
+    public List<TaskResponse> getDailyTasks(Long userId, TaskDailyRequest request) {
         TaskPriority priority = parsePriority(request.priority());
 
-        LocalDateTime kstDayStart = request.date().atStartOfDay().minusHours(9); // 당일 00:00 KST = 전날 15:00 UTC
-        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay().minusHours(9); // 당일 24:00 KST = 당일 15:00 UTC
+        LocalDateTime kstDayStart = request.date().atStartOfDay().minusHours(9);
+        LocalDateTime kstDayEnd = request.date().plusDays(1).atStartOfDay().minusHours(9);
 
-        Page<Task> taskPage = taskRepository.findDailyTasks(
-                userId,
-                kstDayStart,
-                kstDayEnd,
-                request.goalCategoryId(),
-                request.generalCategoryId(),
-                priority,
-                pageable
-        );
-
-        return TaskPageResponse.from(taskPage.map(TaskResponse::from));
+        return taskRepository.findDailyTasks(
+                        userId,
+                        kstDayStart,
+                        kstDayEnd,
+                        request.goalCategoryId(),
+                        request.generalCategoryId(),
+                        priority
+                )
+                .stream()
+                .map(TaskResponse::from)
+                .toList();
     }
 
     public TaskWeeklyResponse getWeeklyTasks(Long userId, TaskWeeklyRequest request) {

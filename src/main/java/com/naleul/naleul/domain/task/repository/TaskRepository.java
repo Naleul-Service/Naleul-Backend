@@ -49,25 +49,15 @@ AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
 AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
 AND (:priority IS NULL OR t.taskPriority = :priority)
 ORDER BY t.plannedStartAt ASC
-""",
-            countQuery = """
-SELECT COUNT(t) FROM Task t
-WHERE t.user.userId = :userId
-AND t.plannedStartAt < :kstDayEnd
-AND t.plannedEndAt > :kstDayStart
-AND (:goalCategoryId IS NULL OR t.goalCategory.goalCategoryId = :goalCategoryId)
-AND (:generalCategoryId IS NULL OR t.generalCategory.generalCategoryId = :generalCategoryId)
-AND (:priority IS NULL OR t.taskPriority = :priority)
 """
     )
-    Page<Task> findDailyTasks(
+    List<Task> findDailyTasks(
             @Param("userId") Long userId,
             @Param("kstDayStart") LocalDateTime kstDayStart,
             @Param("kstDayEnd") LocalDateTime kstDayEnd,
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId,
-            @Param("priority") TaskPriority priority,
-            Pageable pageable
+            @Param("priority") TaskPriority priority
     );
 
     @Query("""
