@@ -54,7 +54,13 @@ public enum SuccessCode {
     TASK_FOUND(HttpStatus.OK, "할 일 조회 성공"),
     TASK_UPDATED(HttpStatus.OK, "할 일 수정 성공"),
     TASK_COMPLETED(HttpStatus.OK, "할 일 실제 기록 성공"),
-    TASK_DELETED(HttpStatus.OK, "할 일 삭제 성공");
+    TASK_DELETED(HttpStatus.OK, "할 일 삭제 성공"),
+
+    // 실제로 한 일 카테고리
+    ACTUAL_TASK_CREATED(HttpStatus.CREATED, "실제 할 일 생성 성공"),
+    ACTUAL_TASKS_FOUND(HttpStatus.OK, "할 일 전체 조회 성공");
+
+
 
     private final HttpStatus status;
     private final String message;

@@ -24,19 +24,23 @@ public class TaskActualController {
     private final TaskActualService taskActualService;
 
     @PostMapping
-    public ResponseEntity<TaskActualResponse> createActual(
+    public ResponseEntity<ApiResponse<TaskActualResponse>> createActual(
             @AuthenticationPrincipal Long userId,
             @RequestBody TaskActualCreateRequest request
     ) {
-        return ResponseEntity.ok(taskActualService.createActual(userId, request));
+        TaskActualResponse response = taskActualService.createActual(userId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.ACTUAL_TASK_CREATED, response));
     }
 
     @GetMapping("/daily")
-    public ResponseEntity<List<TaskActualResponse>> getDailyActuals(
+    public ResponseEntity<ApiResponse<List<TaskActualResponse>>> getDailyActuals(
             @AuthenticationPrincipal Long userId,
             @ModelAttribute TaskActualDailyRequest request
     ) {
-        return ResponseEntity.ok(taskActualService.getDailyActuals(userId, request));
+        List<TaskActualResponse> response = taskActualService.getDailyActuals(userId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.ACTUAL_TASKS_FOUND, response));
     }
 
 
