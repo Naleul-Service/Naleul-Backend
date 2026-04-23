@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/task-actuals")
+@RequestMapping("/api/v1/task-actuals")
 @RequiredArgsConstructor
 public class TaskActualController {
 
