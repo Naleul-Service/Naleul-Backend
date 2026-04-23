@@ -23,7 +23,6 @@ public class TaskActualController {
 
     private final TaskActualService taskActualService;
 
-    // POST /api/task-actuals
     @PostMapping
     public ResponseEntity<TaskActualResponse> createActual(
             @AuthenticationPrincipal Long userId,
@@ -32,7 +31,6 @@ public class TaskActualController {
         return ResponseEntity.ok(taskActualService.createActual(userId, request));
     }
 
-    // GET /api/task-actuals/daily
     @GetMapping("/daily")
     public ResponseEntity<List<TaskActualResponse>> getDailyActuals(
             @AuthenticationPrincipal Long userId,
@@ -42,7 +40,6 @@ public class TaskActualController {
     }
 
 
-    // 실제 시간 기록 (PATCH: 일부만 수정)
     @PatchMapping("/{taskId}/actual")
     public ResponseEntity<ApiResponse<TaskResponse>> recordActual(
             @AuthenticationPrincipal Long userId,
