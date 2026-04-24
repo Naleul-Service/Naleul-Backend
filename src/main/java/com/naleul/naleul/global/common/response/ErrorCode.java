@@ -26,6 +26,7 @@ public enum ErrorCode {
     TASK_INVALID_WEEK_RANGE(HttpStatus.BAD_REQUEST, "조회 범위는 최대 7일입니다."),
     TASK_INVALID_DAY_OF_WEEK(HttpStatus.BAD_REQUEST, "올바르지 않은 요일 값입니다. (MONDAY~SUNDAY)"),
     TASK_INVALID_WEEK_DAY_ID(HttpStatus.BAD_REQUEST, "존재하지 않는 요일 ID가 포함되어 있습니다."),
+    ACTUAL_TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "실제 기록을 찾을 수 없습니다."),
 
     //회고
     RETROSPECTIVE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회고입니다."),

@@ -2,6 +2,7 @@ package com.naleul.naleul.domain.actualTask.service;
 
 import com.naleul.naleul.domain.actualTask.dto.request.TaskActualCreateRequest;
 import com.naleul.naleul.domain.actualTask.dto.request.TaskActualDailyRequest;
+import com.naleul.naleul.domain.actualTask.dto.request.TaskActualUpdateRequest;
 import com.naleul.naleul.domain.actualTask.dto.request.TaskUpdateActualRequest;
 import com.naleul.naleul.domain.actualTask.dto.response.TaskActualResponse;
 import com.naleul.naleul.domain.actualTask.entity.TaskActual;
@@ -106,6 +107,32 @@ public class TaskActualService {
                 .stream()
                 .map(TaskActualResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public TaskActualResponse updateActual(Long userId, Long taskActualId, TaskActualUpdateRequest request) {
+        TaskActual actual = taskActualRepository.findByTaskActualIdAndUserId(taskActualId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACTUAL_TASK_NOT_FOUND));
+
+        GoalCategory goalCategory = findGoalCategory(request.goalCategoryId());
+        GeneralCategory generalCategory = findGeneralCategory(request.generalCategoryId());
+
+        actual.updateAll(
+                request.taskName(),
+                goalCategory,
+                generalCategory,
+                request.actualStartAt(),
+                request.actualEndAt()
+        );
+
+        return TaskActualResponse.from(actual);
+    }
+
+    @Transactional
+    public void deleteActual(Long userId, Long taskActualId) {
+        TaskActual actual = taskActualRepository.findByTaskActualIdAndUserId(taskActualId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACTUAL_TASK_NOT_FOUND));
+        taskActualRepository.delete(actual);
     }
 
     // ── 조회 헬퍼 ─────────────────────────────────────────

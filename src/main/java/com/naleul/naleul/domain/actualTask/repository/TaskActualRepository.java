@@ -36,4 +36,14 @@ public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
             @Param("goalCategoryId") Long goalCategoryId,
             @Param("generalCategoryId") Long generalCategoryId
     );
+
+    @Query("""
+    SELECT ta FROM TaskActual ta
+    WHERE ta.taskActualId = :taskActualId
+      AND ta.user.userId = :userId
+    """)
+    Optional<TaskActual> findByTaskActualIdAndUserId(
+            @Param("taskActualId") Long taskActualId,
+            @Param("userId") Long userId
+    );
 }

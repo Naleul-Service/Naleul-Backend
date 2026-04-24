@@ -2,6 +2,7 @@ package com.naleul.naleul.domain.actualTask.controller;
 
 import com.naleul.naleul.domain.actualTask.dto.request.TaskActualCreateRequest;
 import com.naleul.naleul.domain.actualTask.dto.request.TaskActualDailyRequest;
+import com.naleul.naleul.domain.actualTask.dto.request.TaskActualUpdateRequest;
 import com.naleul.naleul.domain.actualTask.dto.request.TaskUpdateActualRequest;
 import com.naleul.naleul.domain.actualTask.dto.response.TaskActualResponse;
 import com.naleul.naleul.domain.actualTask.service.TaskActualService;
@@ -53,5 +54,26 @@ public class TaskActualController {
         TaskResponse response = taskActualService.recordActual(userId, taskId, request);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.TASK_COMPLETED, response));
+    }
+
+    @PatchMapping("/{taskActualId}")
+    public ResponseEntity<ApiResponse<TaskActualResponse>> updateActual(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskActualId,
+            @Valid @RequestBody TaskActualUpdateRequest request
+    ) {
+        TaskActualResponse response = taskActualService.updateActual(userId, taskActualId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.ACTUAL_TASK_UPDATED, response));
+    }
+
+    @DeleteMapping("/{taskActualId}")
+    public ResponseEntity<ApiResponse<Void>> deleteActual(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskActualId
+    ) {
+        taskActualService.deleteActual(userId, taskActualId);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.ACTUAL_TASK_DELETED, null));
     }
 }

@@ -57,4 +57,17 @@ public class TaskActual {
             this.actualDurationMinutes = Duration.between(startAt, endAt).toMinutes();
         }
     }
+
+    public void updateAll(String taskName, GoalCategory goalCategory,
+                          GeneralCategory generalCategory,
+                          LocalDateTime startAt, LocalDateTime endAt) {
+        this.taskName = taskName;
+        this.goalCategory = goalCategory;
+        this.generalCategory = generalCategory;
+        this.actualStartAt = startAt;
+        this.actualEndAt = endAt;
+        if (startAt != null && endAt != null) {
+            this.actualDurationMinutes = Duration.between(startAt, endAt).toMinutes();
+        }
+    }
 }
