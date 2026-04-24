@@ -1,10 +1,8 @@
 package com.naleul.naleul.domain.actualTask.service;
 
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualCreateRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualDailyRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualUpdateRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskUpdateActualRequest;
+import com.naleul.naleul.domain.actualTask.dto.request.*;
 import com.naleul.naleul.domain.actualTask.dto.response.TaskActualResponse;
+import com.naleul.naleul.domain.actualTask.dto.response.TaskActualWeeklyResponse;
 import com.naleul.naleul.domain.actualTask.entity.TaskActual;
 import com.naleul.naleul.domain.actualTask.repository.TaskActualRepository;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
@@ -22,10 +20,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -133,6 +132,53 @@ public class TaskActualService {
         TaskActual actual = taskActualRepository.findByTaskActualIdAndUserId(taskActualId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACTUAL_TASK_NOT_FOUND));
         taskActualRepository.delete(actual);
+    }
+
+    // TaskActualService.java — 메서드 추가
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final Map<DayOfWeek, String> DAY_KEY_MAP = Map.of(
+            DayOfWeek.MONDAY,    "MONDAY",
+            DayOfWeek.TUESDAY,   "TUESDAY",
+            DayOfWeek.WEDNESDAY, "WEDNESDAY",
+            DayOfWeek.THURSDAY,  "THURSDAY",
+            DayOfWeek.FRIDAY,    "FRIDAY",
+            DayOfWeek.SATURDAY,  "SATURDAY",
+            DayOfWeek.SUNDAY,    "SUNDAY"
+    );
+
+    public TaskActualWeeklyResponse getWeeklyActuals(Long userId, TaskActualWeeklyRequest request) {
+        // KST 기준 주 시작/끝을 UTC로 변환
+        LocalDateTime kstWeekStart = request.startDate().atStartOfDay().minusHours(KST_OFFSET_HOURS);
+        LocalDateTime kstWeekEnd   = request.endDate().plusDays(1).atStartOfDay().minusHours(KST_OFFSET_HOURS);
+
+        List<TaskActual> actuals = taskActualRepository.findWeeklyActuals(
+                userId,
+                kstWeekStart,
+                kstWeekEnd,
+                request.goalCategoryId(),
+                request.generalCategoryId()
+        );
+
+        // 요일별 초기화 (순서 보장)
+        Map<String, List<TaskActualResponse>> actualsByDay = new LinkedHashMap<>();
+        for (String day : List.of("MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY")) {
+            actualsByDay.put(day, new ArrayList<>());
+        }
+
+        // KST 기준 요일로 분류
+        for (TaskActual actual : actuals) {
+            LocalDateTime kstStart = actual.getActualStartAt().plusHours(KST_OFFSET_HOURS);
+            String dayKey = DAY_KEY_MAP.get(kstStart.getDayOfWeek());
+
+            // 주 범위 안에 있는 경우만 (자정 걸쳐오는 케이스 방어)
+            LocalDate kstDate = kstStart.toLocalDate();
+            if (!kstDate.isBefore(request.startDate()) && !kstDate.isAfter(request.endDate())) {
+                actualsByDay.get(dayKey).add(TaskActualResponse.from(actual));
+            }
+        }
+
+        return TaskActualWeeklyResponse.from(actualsByDay);
     }
 
     // ── 조회 헬퍼 ─────────────────────────────────────────

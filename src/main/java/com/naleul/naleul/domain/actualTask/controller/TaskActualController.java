@@ -1,10 +1,8 @@
 package com.naleul.naleul.domain.actualTask.controller;
 
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualCreateRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualDailyRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskActualUpdateRequest;
-import com.naleul.naleul.domain.actualTask.dto.request.TaskUpdateActualRequest;
+import com.naleul.naleul.domain.actualTask.dto.request.*;
 import com.naleul.naleul.domain.actualTask.dto.response.TaskActualResponse;
+import com.naleul.naleul.domain.actualTask.dto.response.TaskActualWeeklyResponse;
 import com.naleul.naleul.domain.actualTask.service.TaskActualService;
 import com.naleul.naleul.domain.task.dto.response.TaskResponse;
 import com.naleul.naleul.global.common.response.ApiResponse;
@@ -75,5 +73,17 @@ public class TaskActualController {
         taskActualService.deleteActual(userId, taskActualId);
         return ResponseEntity
                 .ok(ApiResponse.success(SuccessCode.ACTUAL_TASK_DELETED, null));
+    }
+
+    // TaskActualController.java — 추가
+
+    @GetMapping("/weekly")
+    public ResponseEntity<ApiResponse<TaskActualWeeklyResponse>> getWeeklyActuals(
+            @AuthenticationPrincipal Long userId,
+            @ModelAttribute TaskActualWeeklyRequest request
+    ) {
+        TaskActualWeeklyResponse response = taskActualService.getWeeklyActuals(userId, request);
+        return ResponseEntity
+                .ok(ApiResponse.success(SuccessCode.ACTUAL_TASKS_FOUND, response));
     }
 }

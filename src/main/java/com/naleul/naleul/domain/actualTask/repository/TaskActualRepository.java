@@ -46,4 +46,24 @@ public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
             @Param("taskActualId") Long taskActualId,
             @Param("userId") Long userId
     );
+
+    // TaskActualRepository.java
+    @Query("""
+    SELECT ta FROM TaskActual ta
+    JOIN FETCH ta.goalCategory g
+    JOIN FETCH ta.generalCategory ge
+    WHERE ta.user.userId = :userId
+      AND ta.actualStartAt < :kstWeekEnd
+      AND ta.actualEndAt   > :kstWeekStart
+      AND (:goalCategoryId IS NULL OR ta.goalCategory.goalCategoryId = :goalCategoryId)
+      AND (:generalCategoryId IS NULL OR ta.generalCategory.generalCategoryId = :generalCategoryId)
+    ORDER BY ta.actualStartAt ASC
+    """)
+    List<TaskActual> findWeeklyActuals(
+            @Param("userId") Long userId,
+            @Param("kstWeekStart") LocalDateTime kstWeekStart,
+            @Param("kstWeekEnd") LocalDateTime kstWeekEnd,
+            @Param("goalCategoryId") Long goalCategoryId,
+            @Param("generalCategoryId") Long generalCategoryId
+    );
 }
