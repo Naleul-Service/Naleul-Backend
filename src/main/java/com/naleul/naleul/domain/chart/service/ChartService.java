@@ -4,6 +4,7 @@ import com.naleul.naleul.domain.chart.dto.AchievementChartDto;
 import com.naleul.naleul.domain.chart.dto.ChartResponseDto;
 import com.naleul.naleul.domain.chart.dto.ChartSliceDto;
 import com.naleul.naleul.domain.chart.dto.GoalCategoryChartDto;
+import com.naleul.naleul.domain.chart.repository.ChartRepository;
 import com.naleul.naleul.domain.chart.repository.projection.AchievementStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.CategoryStatProjection;
 import com.naleul.naleul.domain.chart.repository.projection.GoalGeneralStatProjection;
@@ -19,19 +20,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChartService {
 
-    private final TaskRepository taskRepository;
+    private final ChartRepository chartRepository;  // TaskRepository → ChartRepository
+    private final TaskRepository taskRepository;    // 달성률은 그대로 유지
 
-    // 7-1-1: 전체 카테고리 차트
     public ChartResponseDto getGoalCategoryChart(Long userId) {
-        List<CategoryStatProjection> stats = taskRepository.findGoalCategoryStats(userId);
+        List<CategoryStatProjection> stats = chartRepository.findGoalCategoryStats(userId);
         return buildChartResponse(stats);
     }
 
-    // 7-2-1: 목표 카테고리 차트
     public List<GoalCategoryChartDto> getGoalDetailChart(Long userId) {
-        List<GoalGeneralStatProjection> stats = taskRepository.findGoalGeneralCategoryStats(userId);
-
-        // goalCategoryId 기준으로 그룹핑
+        List<GoalGeneralStatProjection> stats = chartRepository.findGoalGeneralCategoryStats(userId);
+        // 나머지 로직 동일
         Map<Long, List<GoalGeneralStatProjection>> grouped = stats.stream()
                 .collect(Collectors.groupingBy(GoalGeneralStatProjection::getGoalCategoryId));
 
@@ -65,13 +64,27 @@ public class ChartService {
                 .toList();
     }
 
-    // 7-3-1: 일반 카테고리 차트
     public ChartResponseDto getGeneralCategoryChart(Long userId) {
-        List<CategoryStatProjection> stats = taskRepository.findGeneralCategoryStats(userId);
+        List<CategoryStatProjection> stats = chartRepository.findGeneralCategoryStats(userId);
         return buildChartResponse(stats);
     }
 
-    // ── private 헬퍼 ──────────────────────────────────────
+    // 달성률 — TaskRepository 그대로 유지
+    public AchievementChartDto getAchievementChart(Long userId) {
+        AchievementStatProjection stat = taskRepository.findAchievementStats(userId);
+
+        long total      = stat.getTotalCount()    != null ? stat.getTotalCount()    : 0L;
+        long achieved   = stat.getAchievedCount() != null ? stat.getAchievedCount() : 0L;
+        long unachieved = total - achieved;
+        double rate     = total == 0 ? 0.0 : Math.round((double) achieved / total * 1000.0) / 10.0;
+
+        return AchievementChartDto.builder()
+                .totalCount(total)
+                .achievedCount(achieved)
+                .unachievedCount(unachieved)
+                .achievementRate(rate)
+                .build();
+    }
 
     private ChartResponseDto buildChartResponse(List<CategoryStatProjection> stats) {
         long total = stats.stream().mapToLong(CategoryStatProjection::getTotalMinutes).sum();
@@ -94,23 +107,6 @@ public class ChartService {
 
     private double calcPercentage(long part, long total) {
         if (total == 0) return 0.0;
-        return Math.round((double) part / total * 1000.0) / 10.0; // 소수점 1자리
-    }
-
-    public AchievementChartDto getAchievementChart(Long userId) {
-        AchievementStatProjection stat = taskRepository.findAchievementStats(userId);
-
-        long total    = stat.getTotalCount()    != null ? stat.getTotalCount()    : 0L;
-        long achieved = stat.getAchievedCount() != null ? stat.getAchievedCount() : 0L;
-        long unachieved = total - achieved;
-
-        double rate = total == 0 ? 0.0 : Math.round((double) achieved / total * 1000.0) / 10.0;
-
-        return AchievementChartDto.builder()
-                .totalCount(total)
-                .achievedCount(achieved)
-                .unachievedCount(unachieved)
-                .achievementRate(rate)
-                .build();
+        return Math.round((double) part / total * 1000.0) / 10.0;
     }
 }
