@@ -54,8 +54,8 @@ public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
     JOIN FETCH ta.goalCategory g
     JOIN FETCH ta.generalCategory ge
     WHERE ta.user.userId = :userId
-      AND ta.actualStartAt >= :kstDayStart
-      AND ta.actualStartAt <  :kstDayEnd
+      AND ta.actualStartAt >= :kstWeekStart
+      AND ta.actualStartAt <  :kstWeekEnd
       AND (:goalCategoryId IS NULL OR ta.goalCategory.goalCategoryId = :goalCategoryId)
       AND (:generalCategoryId IS NULL OR ta.generalCategory.generalCategoryId = :generalCategoryId)
     ORDER BY ta.actualStartAt ASC
