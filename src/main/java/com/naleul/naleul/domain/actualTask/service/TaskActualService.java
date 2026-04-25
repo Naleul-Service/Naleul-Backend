@@ -202,10 +202,12 @@ public class TaskActualService {
 
     private LocalDateTime toKstDayStart(LocalDate date) {
         return date.atStartOfDay().minusHours(KST_OFFSET_HOURS);
+        // 2026-04-25 00:00 - 9h = 2026-04-24 15:00 (UTC)
     }
 
     private LocalDateTime toKstDayEnd(LocalDate date) {
         return date.plusDays(1).atStartOfDay().minusHours(KST_OFFSET_HOURS);
+        // 2026-04-26 00:00 - 9h = 2026-04-25 15:00 (UTC)
     }
 
     private Long calculateMinutes(LocalDateTime start, LocalDateTime end) {
