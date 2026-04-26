@@ -167,14 +167,28 @@ public class TaskActualService {
         }
 
         // KST 기준 요일로 분류
+        // TaskActualService.java — getWeeklyActuals 분류 로직 수정
+
         for (TaskActual actual : actuals) {
             LocalDateTime kstStart = actual.getActualStartAt().plusHours(KST_OFFSET_HOURS);
-            String dayKey = DAY_KEY_MAP.get(kstStart.getDayOfWeek());
+            LocalDateTime kstEnd   = actual.getActualEndAt().plusHours(KST_OFFSET_HOURS);
 
-            // 주 범위 안에 있는 경우만 (자정 걸쳐오는 케이스 방어)
-            LocalDate kstDate = kstStart.toLocalDate();
-            if (!kstDate.isBefore(request.startDate()) && !kstDate.isAfter(request.endDate())) {
-                actualsByDay.get(dayKey).add(TaskActualResponse.from(actual));
+            LocalDate startDate = kstStart.toLocalDate();
+            LocalDate endDate   = kstEnd.toLocalDate();
+
+            // startDate ~ endDate 사이의 모든 날짜 버킷에 넣기
+            // (자정 정각에 끝나는 경우 endDate는 포함하지 않음)
+            boolean endIsExact = kstEnd.toLocalTime().equals(LocalTime.MIDNIGHT);
+            LocalDate effectiveEndDate = endIsExact ? endDate.minusDays(1) : endDate;
+
+            LocalDate cursor = startDate;
+            while (!cursor.isAfter(effectiveEndDate)) {
+                // 주 범위 안에 있는 날짜만
+                if (!cursor.isBefore(request.startDate()) && !cursor.isAfter(request.endDate())) {
+                    String dayKey = DAY_KEY_MAP.get(cursor.getDayOfWeek());
+                    actualsByDay.get(dayKey).add(TaskActualResponse.from(actual));
+                }
+                cursor = cursor.plusDays(1);
             }
         }
 
