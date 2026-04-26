@@ -1,5 +1,6 @@
 package com.naleul.naleul.domain.goalCategory.service;
 
+import com.naleul.naleul.domain.generalCategory.dto.response.GeneralCategoryResponse;
 import com.naleul.naleul.domain.generalCategory.entity.GeneralCategory;
 import com.naleul.naleul.domain.generalCategory.repository.GeneralCategoryRepository;
 import com.naleul.naleul.domain.goalCategory.dto.request.GeneralCategoryAssignRequest;
@@ -188,10 +189,31 @@ public class GoalCategoryService {
             Long userId,
             Pageable pageable
     ) {
-        return goalCategoryRepository.findCompletedByUserId(
+        Page<CompletedGoalCategoryResponse> page = goalCategoryRepository.findCompletedByUserId(
                 userId,
                 GoalCategoryStatus.COMPLETED,
                 pageable
         );
+
+        // ✅ generalCategories 별도 조회해서 채우기
+        return page.map(response -> {
+            GoalCategory gc = goalCategoryRepository.findByIdWithAll(response.goalCategoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
+
+            List<GeneralCategoryResponse> generalCategories = gc.getGeneralCategories()
+                    .stream()
+                    .map(GeneralCategoryResponse::new)
+                    .toList();
+
+            return new CompletedGoalCategoryResponse(
+                    response.goalCategoryId(),
+                    response.goalCategoryName(),
+                    response.achievement(),
+                    response.totalActualMinutes(),
+                    response.durationDays(),
+                    response.taskCount(),
+                    generalCategories
+            );
+        });
     }
 }
