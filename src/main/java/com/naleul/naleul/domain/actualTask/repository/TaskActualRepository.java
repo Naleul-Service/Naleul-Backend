@@ -18,18 +18,17 @@ public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
     Optional<TaskActual> findFirstByTaskTaskId(Long taskId);
 
     // 추가
-    // TaskActualRepository — findDailyActuals 쿼리만 수정
     @Query("""
-    SELECT ta FROM TaskActual ta
-    JOIN FETCH ta.goalCategory g
-    JOIN FETCH ta.generalCategory ge
-    WHERE ta.user.userId = :userId
-      AND ta.actualStartAt >= :kstDayStart
-      AND ta.actualStartAt <  :kstDayEnd
-      AND (:goalCategoryId IS NULL OR ta.goalCategory.goalCategoryId = :goalCategoryId)
-      AND (:generalCategoryId IS NULL OR ta.generalCategory.generalCategoryId = :generalCategoryId)
-    ORDER BY ta.actualStartAt ASC
-    """)
+        SELECT ta FROM TaskActual ta
+        JOIN FETCH ta.goalCategory g
+        JOIN FETCH ta.generalCategory ge
+        WHERE ta.user.userId = :userId
+          AND ta.actualStartAt < :kstDayEnd
+          AND ta.actualEndAt   > :kstDayStart
+          AND (:goalCategoryId IS NULL OR ta.goalCategory.goalCategoryId = :goalCategoryId)
+          AND (:generalCategoryId IS NULL OR ta.generalCategory.generalCategoryId = :generalCategoryId)
+        ORDER BY ta.actualStartAt ASC
+""")
     List<TaskActual> findDailyActuals(
             @Param("userId") Long userId,
             @Param("kstDayStart") LocalDateTime kstDayStart,
@@ -54,8 +53,8 @@ public interface TaskActualRepository extends JpaRepository<TaskActual, Long> {
     JOIN FETCH ta.goalCategory g
     JOIN FETCH ta.generalCategory ge
     WHERE ta.user.userId = :userId
-      AND ta.actualStartAt >= :kstWeekStart
-      AND ta.actualStartAt <  :kstWeekEnd
+      AND ta.actualStartAt < :kstWeekEnd
+      AND ta.actualEndAt   > :kstWeekStart
       AND (:goalCategoryId IS NULL OR ta.goalCategory.goalCategoryId = :goalCategoryId)
       AND (:generalCategoryId IS NULL OR ta.generalCategory.generalCategoryId = :generalCategoryId)
     ORDER BY ta.actualStartAt ASC
