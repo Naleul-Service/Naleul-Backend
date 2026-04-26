@@ -13,7 +13,10 @@ public record CompletedGoalCategoryResponse(
         Long totalActualMinutes,
         Long durationDays,
         Long taskCount,
-        List<GeneralCategoryResponse> generalCategories
+        List<GeneralCategoryResponse> generalCategories,
+        String colorCode,
+        LocalDate startDate,
+        LocalDate endDate
 ) {
     // record는 canonical constructor(6개 파라미터)가 자동 생성됨
     // JPQL new()용 — startDate/endDate 7개 파라미터 생성자 별도 추가
@@ -35,7 +38,10 @@ public record CompletedGoalCategoryResponse(
                         ? ChronoUnit.DAYS.between(startDate, endDate)
                         : 0L,
                 taskCount == null ? 0L : taskCount,
-                List.of()
+                List.of(),
+                null,
+                startDate,
+                endDate
         );
     }
 }

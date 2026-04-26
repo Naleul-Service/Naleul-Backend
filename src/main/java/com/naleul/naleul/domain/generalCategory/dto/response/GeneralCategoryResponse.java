@@ -12,6 +12,7 @@ public class GeneralCategoryResponse {
     private final Long goalCategoryId;
     private final String goalCategoryName;
     private final Long colorId;
+    private final String colorCode;
 
     public GeneralCategoryResponse(GeneralCategory generalCategory) {
         this.generalCategoryId = generalCategory.getGeneralCategoryId();
@@ -20,5 +21,8 @@ public class GeneralCategoryResponse {
         this.goalCategoryId = generalCategory.getGoalCategory().getGoalCategoryId();
         this.goalCategoryName = generalCategory.getGoalCategory().getGoalCategoryName();
         this.colorId = generalCategory.getColor() != null ? generalCategory.getColor().getUserColorId() : null;
+        this.colorCode = generalCategory.getColor() != null
+                ? generalCategory.getColor().getColorCode()
+                : null;
     }
 }

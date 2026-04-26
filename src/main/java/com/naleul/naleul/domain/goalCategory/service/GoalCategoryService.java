@@ -212,7 +212,10 @@ public class GoalCategoryService {
                     response.totalActualMinutes(),
                     response.durationDays(),
                     response.taskCount(),
-                    generalCategories
+                    generalCategories,
+                    gc.getUserColor() != null ? gc.getUserColor().getColorCode() : null,  // ✅
+                    response.startDate(),   // ✅
+                    response.endDate()      // ✅
             );
         });
     }
