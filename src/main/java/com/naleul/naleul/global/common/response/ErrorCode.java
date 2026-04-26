@@ -36,6 +36,7 @@ public enum ErrorCode {
     COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 색상입니다."),
     COLOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 색상입니다."),
     DEFAULT_COLOR_CANNOT_BE_DELETED(HttpStatus.BAD_REQUEST, "기본 색상은 삭제할 수 없습니다."),
+    COLOR_IN_USE(HttpStatus.CONFLICT, "해당 색상은 카테고리에서 사용 중이에요. 카테고리 색상을 먼저 변경해주세요."),
 
     // Validation
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
@@ -53,6 +54,7 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "리소스를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
+    DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "데이터 제약 조건 위반이에요."),
 
     // 유저
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),

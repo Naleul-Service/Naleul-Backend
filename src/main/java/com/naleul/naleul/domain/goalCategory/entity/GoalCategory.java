@@ -59,6 +59,7 @@ public class GoalCategory {
 
     public void delete() {
         this.goalCategoryStatus = GoalCategoryStatus.DELETED;
+        this.userColor = null;
     }
 
     public void update(String name, GoalCategoryStatus status, LocalDate startDate) {

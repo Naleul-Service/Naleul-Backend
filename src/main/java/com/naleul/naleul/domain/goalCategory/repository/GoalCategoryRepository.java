@@ -3,6 +3,7 @@ package com.naleul.naleul.domain.goalCategory.repository;
 import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
 import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
+import com.naleul.naleul.domain.userColor.entity.UserColor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -79,5 +80,16 @@ public interface GoalCategoryRepository extends JpaRepository<GoalCategory, Long
             @Param("userId") Long userId,
             @Param("status") GoalCategoryStatus status,
             Pageable pageable
+    );
+
+    @Query("""
+    SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END
+    FROM GoalCategory g
+    WHERE g.userColor = :color
+    AND g.goalCategoryStatus != :deletedStatus
+""")
+    boolean existsByUserColorAndNotDeleted(
+            @Param("color") UserColor color,
+            @Param("deletedStatus") GoalCategoryStatus deletedStatus
     );
 }

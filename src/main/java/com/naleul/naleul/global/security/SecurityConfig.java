@@ -40,7 +40,9 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/**",           // 로그인, 회원가입
+                                "/api/v1/auth/**",  // 로그인, 회원가입
+                                "/api/auth/kakao/callback",
+                                "/api/auth/**",
                                 "/swagger-ui/**",            // 스웨거
                                 "/v3/api-docs/**",           // 스웨거
                                 "/swagger-resources/**",

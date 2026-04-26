@@ -2,6 +2,9 @@ package com.naleul.naleul.domain.userColor.service;
 
 // domain/color/service/UserColorService.java
 
+import com.naleul.naleul.domain.generalCategory.repository.GeneralCategoryRepository;
+import com.naleul.naleul.domain.goalCategory.enums.GoalCategoryStatus;
+import com.naleul.naleul.domain.goalCategory.repository.GoalCategoryRepository;
 import com.naleul.naleul.domain.user.entity.User;
 import com.naleul.naleul.domain.user.repository.UserRepository;
 import com.naleul.naleul.domain.userColor.dto.response.UserColorResponse;
@@ -23,6 +26,8 @@ public class UserColorService {
 
     private final UserColorRepository userColorRepository;
     private final UserRepository userRepository;
+    private final GoalCategoryRepository goalCategoryRepository;
+    private final GeneralCategoryRepository generalCategoryRepository;
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
@@ -74,6 +79,16 @@ public class UserColorService {
 
         if (userColor.isDefault()) {
             throw new CustomException(ErrorCode.DEFAULT_COLOR_CANNOT_BE_DELETED);
+        }
+
+        // goal_category 체크 (DELETED 제외)
+        if (goalCategoryRepository.existsByUserColorAndNotDeleted(userColor, GoalCategoryStatus.DELETED)) {
+            throw new CustomException(ErrorCode.COLOR_IN_USE);
+        }
+
+        // general_category 체크 추가
+        if (generalCategoryRepository.existsByColor(userColor)) {
+            throw new CustomException(ErrorCode.COLOR_IN_USE);
         }
 
         userColorRepository.delete(userColor);

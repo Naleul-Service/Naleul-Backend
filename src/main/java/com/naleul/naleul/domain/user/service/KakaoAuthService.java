@@ -13,7 +13,7 @@ import com.naleul.naleul.domain.user.repository.RefreshTokenRepository;
 import com.naleul.naleul.domain.user.repository.UserRepository;
 import com.naleul.naleul.domain.userColor.service.UserColorService;
 import com.naleul.naleul.global.jwt.JwtProvider;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +21,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
-@RequiredArgsConstructor
 public class KakaoAuthService {
 
     private final UserRepository userRepository;
@@ -31,17 +31,40 @@ public class KakaoAuthService {
     private final GoalCategoryService goalCategoryService;
     private final GeneralCategoryService generalCategoryService;
     private final UserColorService userColorService;
+    private final String clientId;
+    private final String clientSecret;
+    private final String defaultRedirectUri;
 
-    @Value("${kakao.client-id}")
-    private String clientId;
-
-    @Value("${kakao.client-secret}")
-    private String clientSecret;
+    // ✅ @RequiredArgsConstructor 제거 — @Value는 생성자 파라미터에 붙여야 final 필드에 주입 가능
+    public KakaoAuthService(
+            UserRepository userRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            JwtProvider jwtProvider,
+            GoalCategoryService goalCategoryService,
+            GeneralCategoryService generalCategoryService,
+            UserColorService userColorService,
+            @Value("${kakao.client-id}") String clientId,
+            @Value("${kakao.client-secret}") String clientSecret,
+            @Value("${kakao.redirect-uri}") String defaultRedirectUri
+    ) {
+        this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.jwtProvider = jwtProvider;
+        this.goalCategoryService = goalCategoryService;
+        this.generalCategoryService = generalCategoryService;
+        this.userColorService = userColorService;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.defaultRedirectUri = defaultRedirectUri;
+    }
 
     @Transactional
-    public LoginResponse kakaoLogin(String code, String redirectUri) {  // redirectUri 파라미터로 받음
+    public LoginResponse kakaoLogin(String code, String redirectUri) {
+        // ✅ redirectUri가 null이면 설정값 사용
+        String uri = (redirectUri != null) ? redirectUri : defaultRedirectUri;
+
         // 1. 인가코드로 카카오 액세스 토큰 받기
-        KakaoTokenResponse tokenResponse = getKakaoToken(code, redirectUri);
+        KakaoTokenResponse tokenResponse = getKakaoToken(code, uri);
 
         // 2. 액세스 토큰으로 카카오 유저 정보 받기
         KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(tokenResponse.getAccessToken());
@@ -59,13 +82,17 @@ public class KakaoAuthService {
     }
 
     private KakaoTokenResponse getKakaoToken(String code, String redirectUri) {
+        log.info("=== 카카오 토큰 요청 ===");
+        log.info("redirectUri: {}", redirectUri);
+        log.info("clientId: {}", clientId);
+
         return WebClient.create("https://kauth.kakao.com")
                 .post()
                 .uri("/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
                 .bodyValue("grant_type=authorization_code"
                         + "&client_id=" + clientId
-                        + "&redirect_uri=" + redirectUri  // 동적으로 받은 값 사용
+                        + "&redirect_uri=" + redirectUri
                         + "&code=" + code
                         + "&client_secret=" + clientSecret)
                 .retrieve()
@@ -96,7 +123,7 @@ public class KakaoAuthService {
 
                     GoalCategory etcGoalCategory = goalCategoryService.createDefaultEtcCategory(newUser);
                     generalCategoryService.createDefaultCategory(newUser, etcGoalCategory);
-                    userColorService.createDefaultColors(newUser); // 수정
+                    userColorService.createDefaultColors(newUser);
 
                     return newUser;
                 });

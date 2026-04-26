@@ -21,7 +21,7 @@ public class AuthController {
     @GetMapping("/kakao/callback")
     public ResponseEntity<ApiResponse<LoginResponse>> kakaoCallback(
             @RequestParam String code,
-            @RequestParam String redirectUri
+            @RequestParam(required = false) String redirectUri
     ) {
         LoginResponse response = kakaoAuthService.kakaoLogin(code, redirectUri);
         return ResponseEntity
