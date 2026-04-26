@@ -15,13 +15,13 @@ public class RetrospectiveResponse {
     private final LocalDate reviewDate;
     private final String content;
 
-    // GoalCategory 요약
     private final Long goalCategoryId;
     private final String goalCategoryName;
+    private final String goalCategoryColorCode;      // ✅ 추가
 
-    // GeneralCategory 요약
     private final Long generalCategoryId;
     private final String generalCategoryName;
+    private final String generalCategoryColorCode;   // ✅ 추가
 
     private RetrospectiveResponse(Retrospective retrospective) {
         this.retrospectiveId = retrospective.getRetrospectiveId();
@@ -33,11 +33,17 @@ public class RetrospectiveResponse {
                 ? retrospective.getGoalCategory().getGoalCategoryId() : null;
         this.goalCategoryName = retrospective.getGoalCategory() != null
                 ? retrospective.getGoalCategory().getGoalCategoryName() : null;
+        this.goalCategoryColorCode = retrospective.getGoalCategory() != null
+                && retrospective.getGoalCategory().getUserColor() != null
+                ? retrospective.getGoalCategory().getUserColor().getColorCode() : null; // ✅
 
         this.generalCategoryId = retrospective.getGeneralCategory() != null
                 ? retrospective.getGeneralCategory().getGeneralCategoryId() : null;
         this.generalCategoryName = retrospective.getGeneralCategory() != null
                 ? retrospective.getGeneralCategory().getGeneralCategoryName() : null;
+        this.generalCategoryColorCode = retrospective.getGeneralCategory() != null
+                && retrospective.getGeneralCategory().getColor() != null
+                ? retrospective.getGeneralCategory().getColor().getColorCode() : null; // ✅
     }
 
     public static RetrospectiveResponse from(Retrospective retrospective) {
