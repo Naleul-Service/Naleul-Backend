@@ -7,6 +7,7 @@ import com.naleul.naleul.domain.goalCategory.dto.request.GeneralCategoryAssignRe
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCompleteRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCreateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryUpdateRequest;
+import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryPageResponse;
 import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.dto.response.GoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.entity.GoalCategory;
@@ -185,7 +186,7 @@ public class GoalCategoryService {
         goalCategory.delete();
     }
 
-    public Page<CompletedGoalCategoryResponse> getCompletedGoalCategories(
+    public CompletedGoalCategoryPageResponse getCompletedGoalCategories(
             Long userId,
             Pageable pageable
     ) {
@@ -195,8 +196,7 @@ public class GoalCategoryService {
                 pageable
         );
 
-        // ✅ generalCategories 별도 조회해서 채우기
-        return page.map(response -> {
+        Page<CompletedGoalCategoryResponse> enriched = page.map(response -> {
             GoalCategory gc = goalCategoryRepository.findByIdWithAll(response.goalCategoryId())
                     .orElseThrow(() -> new CustomException(ErrorCode.GOAL_CATEGORY_NOT_FOUND));
 
@@ -213,10 +213,12 @@ public class GoalCategoryService {
                     response.durationDays(),
                     response.taskCount(),
                     generalCategories,
-                    gc.getUserColor() != null ? gc.getUserColor().getColorCode() : null,  // ✅
-                    response.startDate(),   // ✅
-                    response.endDate()      // ✅
+                    gc.getUserColor() != null ? gc.getUserColor().getColorCode() : null,
+                    response.startDate(),
+                    response.endDate()
             );
         });
+
+        return CompletedGoalCategoryPageResponse.from(enriched);
     }
 }

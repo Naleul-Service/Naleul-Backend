@@ -4,6 +4,7 @@ import com.naleul.naleul.domain.goalCategory.dto.request.GeneralCategoryAssignRe
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCompleteRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryCreateRequest;
 import com.naleul.naleul.domain.goalCategory.dto.request.GoalCategoryUpdateRequest;
+import com.naleul.naleul.domain.goalCategory.dto.response.CompletedGoalCategoryPageResponse;
 import com.naleul.naleul.domain.goalCategory.dto.response.GoalCategoryResponse;
 import com.naleul.naleul.domain.goalCategory.service.GoalCategoryService;
 import com.naleul.naleul.global.common.response.ApiResponse;
@@ -106,13 +107,11 @@ public class GoalCategoryController {
     }
 
     @GetMapping("/completed")
-    public ResponseEntity<ApiResponse<Page<CompletedGoalCategoryResponse>>> getCompletedGoalCategories(
+    public ResponseEntity<ApiResponse<CompletedGoalCategoryPageResponse>> getCompletedGoalCategories(
             @AuthenticationPrincipal Long userId,
-            @PageableDefault(size = 10, sort = "goalCategoryEndDate", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<CompletedGoalCategoryResponse> response =
-                goalCategoryService.getCompletedGoalCategories(userId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(SuccessCode.GOAL_FOUND, response));
+        CompletedGoalCategoryPageResponse response = goalCategoryService.getCompletedGoalCategories(userId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.GOAL_CATEGORIES_FOUND, response));
     }
 }
