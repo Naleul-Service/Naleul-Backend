@@ -249,8 +249,12 @@ public class TaskService {
         LocalDate endDate = task.getPlannedEndAt() != null
                 ? toKstDate(task.getPlannedEndAt())
                 : startDate;
-        // 시작날과 종료날이 다를 때만 endDate도 포함 (오버나이트)
-        return startDate.equals(dayDate) || (!endDate.equals(startDate) && endDate.equals(dayDate));
+
+        // endDate가 자정(00:00)이면 실제론 전날 끝이므로 포함 안 함
+        boolean endsAtMidnight = task.getPlannedEndAt() != null &&
+                task.getPlannedEndAt().plusHours(9).toLocalTime().equals(java.time.LocalTime.MIDNIGHT);
+
+        return startDate.equals(dayDate) || (!endDate.equals(startDate) && !endsAtMidnight && endDate.equals(dayDate));
     }
 
     private Map<String, LocalDate> buildDayToDateMap(LocalDate startDate) {
