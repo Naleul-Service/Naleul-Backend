@@ -249,7 +249,8 @@ public class TaskService {
         LocalDate endDate = task.getPlannedEndAt() != null
                 ? toKstDate(task.getPlannedEndAt())
                 : startDate;
-        return startDate.equals(dayDate) || endDate.equals(dayDate);
+        // 시작날과 종료날이 다를 때만 endDate도 포함 (오버나이트)
+        return startDate.equals(dayDate) || (!endDate.equals(startDate) && endDate.equals(dayDate));
     }
 
     private Map<String, LocalDate> buildDayToDateMap(LocalDate startDate) {
