@@ -130,18 +130,19 @@ public class RetrospectiveService {
     private DateRange resolveDateRange(ReviewType reviewType, LocalDate baseDate) {
         if (reviewType == null) return new DateRange(null, null);
 
-        LocalDate base = baseDate != null ? baseDate : LocalDate.now();
+        // baseDate 없으면 reviewType만 필터, 날짜 범위 없음
+        if (baseDate == null) return new DateRange(null, null);
 
         return switch (reviewType) {
-            case DAILY -> new DateRange(base, base);
+            case DAILY -> new DateRange(baseDate, baseDate);
             case WEEKLY -> {
-                LocalDate monday = base.with(WeekFields.of(Locale.KOREA).dayOfWeek(), 1);
+                LocalDate monday = baseDate.with(WeekFields.of(Locale.KOREA).dayOfWeek(), 1);
                 LocalDate sunday = monday.plusDays(6);
                 yield new DateRange(monday, sunday);
             }
             case MONTHLY -> {
-                LocalDate start = base.withDayOfMonth(1);
-                LocalDate end = base.withDayOfMonth(base.lengthOfMonth());
+                LocalDate start = baseDate.withDayOfMonth(1);
+                LocalDate end = baseDate.withDayOfMonth(baseDate.lengthOfMonth());
                 yield new DateRange(start, end);
             }
         };
